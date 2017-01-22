@@ -4446,6 +4446,10 @@ sax@~1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.1.tgz#7b8e656190b228e81a66aea748480d828cd2d37a"
 
+seamless-immutable@^7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/seamless-immutable/-/seamless-immutable-7.0.1.tgz#ac1bca1a3ff6c6abfa7c4809af6cd2fe5a21052b"
+
 semantic-ui-react@^0.64.3:
   version "0.64.3"
   resolved "https://registry.yarnpkg.com/semantic-ui-react/-/semantic-ui-react-0.64.3.tgz#b3a4a32518e7ef6e38434e5505571874029438fc"
