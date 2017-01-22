@@ -1,0 +1,31 @@
+{
+  "name": "CodeReviewTool-Server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:Mitu217/CodeReviewTool_Web.git",
+  "author": "Mitu217 <mtksk.26884um@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-react": "^6.22.0",
+    "babelify": "^7.3.0",
+    "browser-sync": "^2.18.6",
+    "del": "^2.2.2",
+    "eslint": "^3.14.0",
+    "eslint-plugin-react": "^6.9.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-cssnano": "^2.1.2",
+    "gulp-less": "^3.3.0",
+    "gulp-load-plugins": "^1.4.0",
+    "gulp-plumber": "^1.1.0",
+    "gulp-sourcemaps": "^2.4.0",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "script": {
+    "build": "gulp build",
+    "serve": "gulp serve"
+  }
+}
