@@ -1,11 +1,12 @@
 import React, { Component, PropTypes } from 'react'
-
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react'
 
+import Appbar from './appbar';
+
 export default class Main extends Component {
-  toggleVisibility() {
+
+  toggleMenu() {
     const nextVisible = !this.props.menuVisible;
-    console.log(nextVisible);
     this.props.onChangeMenuVisible(nextVisible);
   }
 
@@ -13,9 +14,12 @@ export default class Main extends Component {
     const visible = this.props.menuVisible;
     return (
       <div>
-        <Button onClick={() => this.toggleVisibility()}>Toggle Visibility</Button>
+        <Appbar
+          onToggleMenu={ () => this.toggleMenu() }
+        />
+
         <Sidebar.Pushable as={Segment}>
-          <Sidebar as={Menu} animation='overlay' width='thin' visible={visible} icon='labeled' vertical inverted>
+          <Sidebar as={Menu} animation='dimmed push' width='large' visible={visible} icon='labeled' vertical inverted>
             <Menu.Item name='home'>
               <Icon name='home' />
               Home

@@ -76308,7 +76308,7 @@ var App = function (_Component) {
   _react2.default.createElement(App, null)
 ), document.getElementById('app'));
 
-},{"./actions":1163,"./container":1167,"./store/configureStore":1171,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
+},{"./actions":1163,"./container":1168,"./store/configureStore":1172,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76331,6 +76331,67 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var Appbar = function (_Component) {
+  _inherits(Appbar, _Component);
+
+  function Appbar() {
+    _classCallCheck(this, Appbar);
+
+    return _possibleConstructorReturn(this, (Appbar.__proto__ || Object.getPrototypeOf(Appbar)).apply(this, arguments));
+  }
+
+  _createClass(Appbar, [{
+    key: 'render',
+    value: function render() {
+      var _this2 = this;
+
+      return _react2.default.createElement(
+        'div',
+        { id: 'appbar' },
+        _react2.default.createElement(_semanticUiReact.Icon, { id: 'sidebar-icon', name: 'sidebar', size: 'large', onClick: function onClick() {
+            return _this2.props.onToggleMenu();
+          } })
+      );
+    }
+  }]);
+
+  return Appbar;
+}(_react.Component);
+
+exports.default = Appbar;
+
+
+Appbar.propTypes = {
+  onToggleMenu: _react.PropTypes.func
+};
+
+},{"react":934,"semantic-ui-react":1062}],1167:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _semanticUiReact = require('semantic-ui-react');
+
+var _appbar = require('./appbar');
+
+var _appbar2 = _interopRequireDefault(_appbar);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 var Main = function (_Component) {
   _inherits(Main, _Component);
 
@@ -76341,10 +76402,9 @@ var Main = function (_Component) {
   }
 
   _createClass(Main, [{
-    key: 'toggleVisibility',
-    value: function toggleVisibility() {
+    key: 'toggleMenu',
+    value: function toggleMenu() {
       var nextVisible = !this.props.menuVisible;
-      console.log(nextVisible);
       this.props.onChangeMenuVisible(nextVisible);
     }
   }, {
@@ -76356,19 +76416,17 @@ var Main = function (_Component) {
       return _react2.default.createElement(
         'div',
         null,
-        _react2.default.createElement(
-          _semanticUiReact.Button,
-          { onClick: function onClick() {
-              return _this2.toggleVisibility();
-            } },
-          'Toggle Visibility'
-        ),
+        _react2.default.createElement(_appbar2.default, {
+          onToggleMenu: function onToggleMenu() {
+            return _this2.toggleMenu();
+          }
+        }),
         _react2.default.createElement(
           _semanticUiReact.Sidebar.Pushable,
           { as: _semanticUiReact.Segment },
           _react2.default.createElement(
             _semanticUiReact.Sidebar,
-            { as: _semanticUiReact.Menu, animation: 'overlay', width: 'thin', visible: visible, icon: 'labeled', vertical: true, inverted: true },
+            { as: _semanticUiReact.Menu, animation: 'dimmed push', width: 'large', visible: visible, icon: 'labeled', vertical: true, inverted: true },
             _react2.default.createElement(
               _semanticUiReact.Menu.Item,
               { name: 'home' },
@@ -76418,7 +76476,7 @@ Main.propTypes = {
   menuVisible: _react.PropTypes.bool
 };
 
-},{"react":934,"semantic-ui-react":1062}],1167:[function(require,module,exports){
+},{"./appbar":1166,"react":934,"semantic-ui-react":1062}],1168:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76475,7 +76533,7 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Container);
 
-},{"../actions":1163,"../components/main":1166,"react":934,"react-redux":904}],1168:[function(require,module,exports){
+},{"../actions":1163,"../components/main":1167,"react":934,"react-redux":904}],1169:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76496,7 +76554,7 @@ var rootReducer = (0, _redux.combineReducers)({
 
 exports.default = rootReducer;
 
-},{"./menu":1169,"redux":958}],1169:[function(require,module,exports){
+},{"./menu":1170,"redux":958}],1170:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76532,7 +76590,7 @@ var ACTION_HANDLERS = _defineProperty({}, _types2.default.MENU_VISIBLE_CHANGE, c
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1170:[function(require,module,exports){
+},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1171:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76576,7 +76634,7 @@ function rootSaga() {
   }, _marked[0], this);
 }
 
-},{"../actions":1163,"../actions/types":1164,"redux-saga":942,"redux-saga/effects":940}],1171:[function(require,module,exports){
+},{"../actions":1163,"../actions/types":1164,"redux-saga":942,"redux-saga/effects":940}],1172:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76616,4 +76674,4 @@ exports.default = function (initialState) {
   return store;
 };
 
-},{"../reducers":1168,"../sagas":1170,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
+},{"../reducers":1169,"../sagas":1171,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
