@@ -8,10 +8,6 @@ import OauthDrive from '../lib/oauthDrive';
 
 export default class Main extends Component {
 
-  componentWillMount() {
-    OauthDrive.checkAuth();
-  }
-
   toggleMenu() {
     const nextVisible = !this.props.menuVisible;
     this.props.onChangeMenuVisible(nextVisible);

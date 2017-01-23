@@ -76464,11 +76464,6 @@ var Main = function (_Component) {
   }
 
   _createClass(Main, [{
-    key: 'componentWillMount',
-    value: function componentWillMount() {
-      _oauthDrive2.default.checkAuth();
-    }
-  }, {
     key: 'toggleMenu',
     value: function toggleMenu() {
       var nextVisible = !this.props.menuVisible;
@@ -76581,114 +76576,7 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Container);
 
 },{"../actions":1163,"../components/main":1168,"react":934,"react-redux":904}],1170:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-//import gapi from 'googleapis';
-//import fs from 'fs';
-
-// Your Client ID can be retrieved from your project in the Google
-// Developer Console, https://console.developers.google.com
-var CLIENT_ID = '629393106275-qtgu7nefmb0uklfo7i6klm73u7g91b63.apps.googleusercontent.com';
-
-var SCOPES = ['https://www.googleapis.com/auth/drive'];
-var realtimeUtils = new utils.RealtimeUtils({ clientId: '629393106275-qtgu7nefmb0uklfo7i6klm73u7g91b63.apps.googleusercontent.com' });
-
-var OauthDrive = function () {
-  function OauthDrive() {
-    _classCallCheck(this, OauthDrive);
-  }
-
-  _createClass(OauthDrive, [{
-    key: 'checkAuth',
-
-    /**
-    * Check if current user has authorized this application.
-    */
-    value: function checkAuth() {
-      realtimeUtils.authorize(function (response) {
-        /*
-                  if(response.error){
-                    // Authorization failed because this is the first time the user has used your application,
-                    // show the authorize button to prompt them to authorize manually.
-                    var button = document.getElementById('auth_button');
-                    button.classList.add('visible');
-                    button.addEventListener('click', function () {
-                      realtimeUtils.authorize(function(response){
-                        start();
-                      }, true);
-                    });
-                  } else {
-                      start();
-                  }*/
-      }, false);
-    }
-  }, {
-    key: 'handleAuthResult',
-    value: function handleAuthResult(authResult) {
-      var authorizeDiv = document.getElementById('authorize-div');
-      if (authResult && !authResult.error) {
-        // Hide auth UI, then load client library.
-        authorizeDiv.style.display = 'none';
-        loadDriveApi();
-      } else {
-        // Show auth UI, allowing the user to initiate authorization by
-        // clicking authorize button.
-        authorizeDiv.style.display = 'inline';
-      }
-    }
-  }, {
-    key: 'handleAuthClick',
-    value: function handleAuthClick(event) {
-      gapi.auth.authorize({ client_id: CLIENT_ID, scope: SCOPES, immediate: false }, handleAuthResult);
-      return false;
-    }
-  }, {
-    key: 'loadDriveApi',
-    value: function loadDriveApi() {
-      gapi.client.load('drive', 'v2', listFiles);
-    }
-  }, {
-    key: 'listFiles',
-    value: function listFiles() {
-      var request = gapi.client.drive.files.list({
-        'maxResults': 10
-      });
-
-      request.execute(function (resp) {
-        appendPre('Files:');
-        var files = resp.items;
-        if (files && files.length > 0) {
-          for (var i = 0; i < files.length; i++) {
-            var file = files[i];
-            appendPre(file.title + ' (' + file.id + ')');
-          }
-        } else {
-          appendPre('No files found.');
-        }
-      });
-    }
-  }, {
-    key: 'appendPre',
-    value: function appendPre(message) {
-      var pre = document.getElementById('output');
-      var textContent = document.createTextNode(message + '\n');
-      pre.appendChild(textContent);
-    }
-  }]);
-
-  return OauthDrive;
-}();
-
-var oauthDrive = new OauthDrive();
-exports.default = oauthDrive;
+"use strict";
 
 },{}],1171:[function(require,module,exports){
 'use strict';
