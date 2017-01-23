@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react'
 
 import Appbar from './appbar';
+import AppSidebar from './appSidebar';
 
 export default class Main extends Component {
 
@@ -11,7 +12,6 @@ export default class Main extends Component {
   }
 
   render() {
-    const visible = this.props.menuVisible;
     return (
       <div>
         <Appbar
@@ -19,20 +19,9 @@ export default class Main extends Component {
         />
 
         <Sidebar.Pushable as={Segment}>
-          <Sidebar as={Menu} animation='dimmed push' width='large' visible={visible} icon='labeled' vertical inverted>
-            <Menu.Item name='home'>
-              <Icon name='home' />
-              Home
-            </Menu.Item>
-            <Menu.Item name='gamepad'>
-              <Icon name='gamepad' />
-              Games
-            </Menu.Item>
-            <Menu.Item name='camera'>
-              <Icon name='camera' />
-              Channels
-            </Menu.Item>
-          </Sidebar>
+          <AppSidebar
+            visible={ this.props.menuVisible }
+          />
           <Sidebar.Pusher>
             <Segment basic>
               <Header as='h3'>Application Content</Header>

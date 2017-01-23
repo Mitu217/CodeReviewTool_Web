@@ -76308,7 +76308,61 @@ var App = function (_Component) {
   _react2.default.createElement(App, null)
 ), document.getElementById('app'));
 
-},{"./actions":1163,"./container":1168,"./store/configureStore":1172,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
+},{"./actions":1163,"./container":1169,"./store/configureStore":1173,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _semanticUiReact = require('semantic-ui-react');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var AppSidebar = function (_Component) {
+  _inherits(AppSidebar, _Component);
+
+  function AppSidebar() {
+    _classCallCheck(this, AppSidebar);
+
+    return _possibleConstructorReturn(this, (AppSidebar.__proto__ || Object.getPrototypeOf(AppSidebar)).apply(this, arguments));
+  }
+
+  _createClass(AppSidebar, [{
+    key: 'render',
+    value: function render() {
+      var visible = this.props.visible;
+      return _react2.default.createElement(
+        _semanticUiReact.Sidebar,
+        { as: _semanticUiReact.Menu, animation: 'push', visible: visible, icon: 'labeled', vertical: true, inverted: true },
+        '\u30C6\u30B9\u30C8\u30E1\u30CB\u30E5\u30FC'
+      );
+    }
+  }]);
+
+  return AppSidebar;
+}(_react.Component);
+
+exports.default = AppSidebar;
+
+
+AppSidebar.propTypes = {
+  visible: _react.PropTypes.bool
+};
+
+},{"react":934,"semantic-ui-react":1062}],1167:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76365,7 +76419,7 @@ Appbar.propTypes = {
   onToggleMenu: _react.PropTypes.func
 };
 
-},{"react":934,"semantic-ui-react":1062}],1167:[function(require,module,exports){
+},{"react":934,"semantic-ui-react":1062}],1168:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76383,6 +76437,10 @@ var _semanticUiReact = require('semantic-ui-react');
 var _appbar = require('./appbar');
 
 var _appbar2 = _interopRequireDefault(_appbar);
+
+var _appSidebar = require('./appSidebar');
+
+var _appSidebar2 = _interopRequireDefault(_appSidebar);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -76412,7 +76470,6 @@ var Main = function (_Component) {
     value: function render() {
       var _this2 = this;
 
-      var visible = this.props.menuVisible;
       return _react2.default.createElement(
         'div',
         null,
@@ -76424,28 +76481,9 @@ var Main = function (_Component) {
         _react2.default.createElement(
           _semanticUiReact.Sidebar.Pushable,
           { as: _semanticUiReact.Segment },
-          _react2.default.createElement(
-            _semanticUiReact.Sidebar,
-            { as: _semanticUiReact.Menu, animation: 'dimmed push', width: 'large', visible: visible, icon: 'labeled', vertical: true, inverted: true },
-            _react2.default.createElement(
-              _semanticUiReact.Menu.Item,
-              { name: 'home' },
-              _react2.default.createElement(_semanticUiReact.Icon, { name: 'home' }),
-              'Home'
-            ),
-            _react2.default.createElement(
-              _semanticUiReact.Menu.Item,
-              { name: 'gamepad' },
-              _react2.default.createElement(_semanticUiReact.Icon, { name: 'gamepad' }),
-              'Games'
-            ),
-            _react2.default.createElement(
-              _semanticUiReact.Menu.Item,
-              { name: 'camera' },
-              _react2.default.createElement(_semanticUiReact.Icon, { name: 'camera' }),
-              'Channels'
-            )
-          ),
+          _react2.default.createElement(_appSidebar2.default, {
+            visible: this.props.menuVisible
+          }),
           _react2.default.createElement(
             _semanticUiReact.Sidebar.Pusher,
             null,
@@ -76476,7 +76514,7 @@ Main.propTypes = {
   menuVisible: _react.PropTypes.bool
 };
 
-},{"./appbar":1166,"react":934,"semantic-ui-react":1062}],1168:[function(require,module,exports){
+},{"./appSidebar":1166,"./appbar":1167,"react":934,"semantic-ui-react":1062}],1169:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76533,7 +76571,7 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Container);
 
-},{"../actions":1163,"../components/main":1167,"react":934,"react-redux":904}],1169:[function(require,module,exports){
+},{"../actions":1163,"../components/main":1168,"react":934,"react-redux":904}],1170:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76554,7 +76592,7 @@ var rootReducer = (0, _redux.combineReducers)({
 
 exports.default = rootReducer;
 
-},{"./menu":1170,"redux":958}],1170:[function(require,module,exports){
+},{"./menu":1171,"redux":958}],1171:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76590,7 +76628,7 @@ var ACTION_HANDLERS = _defineProperty({}, _types2.default.MENU_VISIBLE_CHANGE, c
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1171:[function(require,module,exports){
+},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1172:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76634,7 +76672,7 @@ function rootSaga() {
   }, _marked[0], this);
 }
 
-},{"../actions":1163,"../actions/types":1164,"redux-saga":942,"redux-saga/effects":940}],1172:[function(require,module,exports){
+},{"../actions":1163,"../actions/types":1164,"redux-saga":942,"redux-saga/effects":940}],1173:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76674,4 +76712,4 @@ exports.default = function (initialState) {
   return store;
 };
 
-},{"../reducers":1169,"../sagas":1171,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
+},{"../reducers":1170,"../sagas":1172,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
