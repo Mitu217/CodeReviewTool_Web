@@ -4,7 +4,13 @@ import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui
 import Appbar from './appbar';
 import AppSidebar from './appSidebar';
 
+import OauthDrive from '../lib/oauthDrive';
+
 export default class Main extends Component {
+
+  componentWillMount() {
+    OauthDrive.checkAuth();
+  }
 
   toggleMenu() {
     const nextVisible = !this.props.menuVisible;

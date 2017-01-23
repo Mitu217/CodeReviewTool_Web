@@ -76308,7 +76308,7 @@ var App = function (_Component) {
   _react2.default.createElement(App, null)
 ), document.getElementById('app'));
 
-},{"./actions":1163,"./container":1169,"./store/configureStore":1173,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
+},{"./actions":1163,"./container":1169,"./store/configureStore":1174,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76442,6 +76442,10 @@ var _appSidebar = require('./appSidebar');
 
 var _appSidebar2 = _interopRequireDefault(_appSidebar);
 
+var _oauthDrive = require('../lib/oauthDrive');
+
+var _oauthDrive2 = _interopRequireDefault(_oauthDrive);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -76460,6 +76464,11 @@ var Main = function (_Component) {
   }
 
   _createClass(Main, [{
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      _oauthDrive2.default.checkAuth();
+    }
+  }, {
     key: 'toggleMenu',
     value: function toggleMenu() {
       var nextVisible = !this.props.menuVisible;
@@ -76514,7 +76523,7 @@ Main.propTypes = {
   menuVisible: _react.PropTypes.bool
 };
 
-},{"./appSidebar":1166,"./appbar":1167,"react":934,"semantic-ui-react":1062}],1169:[function(require,module,exports){
+},{"../lib/oauthDrive":1170,"./appSidebar":1166,"./appbar":1167,"react":934,"semantic-ui-react":1062}],1169:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76578,6 +76587,116 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+//import gapi from 'googleapis';
+//import fs from 'fs';
+
+// Your Client ID can be retrieved from your project in the Google
+// Developer Console, https://console.developers.google.com
+var CLIENT_ID = '629393106275-qtgu7nefmb0uklfo7i6klm73u7g91b63.apps.googleusercontent.com';
+
+var SCOPES = ['https://www.googleapis.com/auth/drive'];
+var realtimeUtils = new utils.RealtimeUtils({ clientId: '629393106275-qtgu7nefmb0uklfo7i6klm73u7g91b63.apps.googleusercontent.com' });
+
+var OauthDrive = function () {
+  function OauthDrive() {
+    _classCallCheck(this, OauthDrive);
+  }
+
+  _createClass(OauthDrive, [{
+    key: 'checkAuth',
+
+    /**
+    * Check if current user has authorized this application.
+    */
+    value: function checkAuth() {
+      realtimeUtils.authorize(function (response) {
+        /*
+                  if(response.error){
+                    // Authorization failed because this is the first time the user has used your application,
+                    // show the authorize button to prompt them to authorize manually.
+                    var button = document.getElementById('auth_button');
+                    button.classList.add('visible');
+                    button.addEventListener('click', function () {
+                      realtimeUtils.authorize(function(response){
+                        start();
+                      }, true);
+                    });
+                  } else {
+                      start();
+                  }*/
+      }, false);
+    }
+  }, {
+    key: 'handleAuthResult',
+    value: function handleAuthResult(authResult) {
+      var authorizeDiv = document.getElementById('authorize-div');
+      if (authResult && !authResult.error) {
+        // Hide auth UI, then load client library.
+        authorizeDiv.style.display = 'none';
+        loadDriveApi();
+      } else {
+        // Show auth UI, allowing the user to initiate authorization by
+        // clicking authorize button.
+        authorizeDiv.style.display = 'inline';
+      }
+    }
+  }, {
+    key: 'handleAuthClick',
+    value: function handleAuthClick(event) {
+      gapi.auth.authorize({ client_id: CLIENT_ID, scope: SCOPES, immediate: false }, handleAuthResult);
+      return false;
+    }
+  }, {
+    key: 'loadDriveApi',
+    value: function loadDriveApi() {
+      gapi.client.load('drive', 'v2', listFiles);
+    }
+  }, {
+    key: 'listFiles',
+    value: function listFiles() {
+      var request = gapi.client.drive.files.list({
+        'maxResults': 10
+      });
+
+      request.execute(function (resp) {
+        appendPre('Files:');
+        var files = resp.items;
+        if (files && files.length > 0) {
+          for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            appendPre(file.title + ' (' + file.id + ')');
+          }
+        } else {
+          appendPre('No files found.');
+        }
+      });
+    }
+  }, {
+    key: 'appendPre',
+    value: function appendPre(message) {
+      var pre = document.getElementById('output');
+      var textContent = document.createTextNode(message + '\n');
+      pre.appendChild(textContent);
+    }
+  }]);
+
+  return OauthDrive;
+}();
+
+var oauthDrive = new OauthDrive();
+exports.default = oauthDrive;
+
+},{}],1171:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
 var _redux = require('redux');
 
 var _menu = require('./menu');
@@ -76592,7 +76711,7 @@ var rootReducer = (0, _redux.combineReducers)({
 
 exports.default = rootReducer;
 
-},{"./menu":1171,"redux":958}],1171:[function(require,module,exports){
+},{"./menu":1172,"redux":958}],1172:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76628,7 +76747,7 @@ var ACTION_HANDLERS = _defineProperty({}, _types2.default.MENU_VISIBLE_CHANGE, c
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1172:[function(require,module,exports){
+},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1173:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76672,7 +76791,7 @@ function rootSaga() {
   }, _marked[0], this);
 }
 
-},{"../actions":1163,"../actions/types":1164,"redux-saga":942,"redux-saga/effects":940}],1173:[function(require,module,exports){
+},{"../actions":1163,"../actions/types":1164,"redux-saga":942,"redux-saga/effects":940}],1174:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76712,4 +76831,4 @@ exports.default = function (initialState) {
   return store;
 };
 
-},{"../reducers":1170,"../sagas":1172,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
+},{"../reducers":1171,"../sagas":1173,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
