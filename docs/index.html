@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Google Realtime Quickstart</title>
+    <title>CodeReviewTool</title>
+
+    <link rel="apple-touch-icon" sizes="120x120" href="images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="images/favicon-16x16.png" sizes="16x16">
+    <link rel="manifest" href="images/manifest.json">
+    <meta name="theme-color" content="#ffffff">
 
     <!-- Load Styles -->
     <link href="https://www.gstatic.com/realtime/quickstart-styles.css" rel="stylesheet" type="text/css"/>
@@ -11,6 +17,7 @@
 
     <!-- Load the utility library -->
     <script src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
+
   </head>
   <body>
     <main>
@@ -22,7 +29,7 @@
       <button id="auth_button">Authorize</button>
     </main>
     <script>
-      var clientId = '629393106275-pg0q06285c5g2goa6k3sihgalqd0dj2c.apps.googleusercontent.com';
+      var clientId = '629393106275-jnod8al0nghvefhublb28kj8pd70to06.apps.googleusercontent.com';
 
       if (!/^([0-9])$/.test(clientId[0])) {
         alert('Invalid Client ID - did you forget to insert your application Client ID?');
