@@ -1,3 +1,4 @@
+<!--
 <!DOCTYPE html>
 <html>
   <head>
@@ -9,13 +10,8 @@
     <link rel="manifest" href="images/manifest.json">
     <meta name="theme-color" content="#ffffff">
 
-    <!-- Load Styles -->
     <link href="https://www.gstatic.com/realtime/quickstart-styles.css" rel="stylesheet" type="text/css"/>
-
-    <!-- Load the Realtime JavaScript library -->
     <script src="https://apis.google.com/js/api.js"></script>
-
-    <!-- Load the utility library -->
     <script src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
 
   </head>
@@ -29,7 +25,7 @@
       <button id="auth_button">Authorize</button>
     </main>
     <script>
-      var clientId = '629393106275-qtgu7nefmb0uklfo7i6klm73u7g91b63.apps.googleusercontent.com';
+      var clientId = '629393106275-jnod8al0nghvefhublb28kj8pd70to06.apps.googleusercontent.com';
 
       if (!/^([0-9])$/.test(clientId[0])) {
         alert('Invalid Client ID - did you forget to insert your application Client ID?');
@@ -100,3 +96,182 @@
     </script>
   </body>
 </html>
+-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Google Realtime Quickstart</title>
+
+    <link rel="apple-touch-icon" sizes="120x120" href="images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="images/favicon-16x16.png" sizes="16x16">
+    <link rel="manifest" href="images/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+
+    <link href="https://www.gstatic.com/realtime/quickstart-styles.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.css"></link>
+    <link rel="stylesheet" href="./css/style.css"></link>
+
+    <!-- Google Apis -->
+    <script src="https://apis.google.com/js/client.js"></script>
+
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src='js/app.js'></script>
+
+  </body>
+</html>
+
+<!--
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <title>get google drive files sample</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://apis.google.com/js/client.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+        crossorigin="anonymous"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+    <script>
+        var googleDriveClient;
+        var nextPageToken;
+        var parentId;
+        getGoogleAuth().then(loadGoogleDrive).then(function (gClient) {
+            googleDriveClient = gClient;
+            getFileList('', 'root').then(function (objFileList) {
+                viewFileList(objFileList);
+            });
+        });
+
+        // load google drive client
+        function loadGoogleDrive() {
+            var p = new Promise(function (resolve, reject) {
+                try {
+                    window.gapi.client.load('drive', 'v3', fncOnDriveApiLoad);
+                } catch (e) {
+                    reject(e);
+                }
+
+                function fncOnDriveApiLoad() {
+                    resolve(window.gapi.client);
+                }
+            });
+            return p;
+        }
+
+        // authorize google
+        function getGoogleAuth() {
+            var objAuthParam = {
+                'client_id': '629393106275-jnod8al0nghvefhublb28kj8pd70to06.apps.googleusercontent.com',
+                'scope': ['https://www.googleapis.com/auth/drive'],
+                'immediate': false
+            };
+            var p = new Promise(function (resolve, reject) {
+                window.gapi.load('auth', {
+                    'callback': function () {
+                        window.gapi.auth.authorize(
+                            objAuthParam,
+                            authResult);
+                    }
+                });
+
+                function authResult(objAuthResult) {
+                    if (objAuthResult && !objAuthResult.error) {
+                        resolve(objAuthResult.access_token);
+                    } else {
+                        // auth failed.
+                        reject(objAuthResult);
+                    }
+                }
+            });
+            return p;
+        }
+
+        // get drive file list
+        function getFileList(strPageToken, strParentId) {
+            var objParam = {
+                pageSize: 100,
+                orderBy: '',
+                q: 'trashed=false',
+                fields: 'files(id, name, kind, size, mimeType, lastModifyingUser, modifiedTime, iconLink, owners, folderColorRgb, shared, webViewLink, webContentLink), nextPageToken'
+            };
+            if (strParentId) {
+                objParam.q += ' and ' + '"' + strParentId + '" in parents';
+            }
+            if (strPageToken) {
+                objParam.pageToken = strPageToken;
+            }
+            var p = new Promise(function (resolve, reject) {
+                var objReq = googleDriveClient.drive.files.list(objParam);
+                objReq.execute(function (resp) {
+                    resolve(resp);
+                });
+            });
+            return p;
+        }
+
+        // ファイルの一覧表示
+        function viewFileList(objFileList) {
+            var arrayFiles = objFileList.files;
+            console.log(arrayFiles);
+            nextPageToken = objFileList.nextPageToken ? objFileList.nextPageToken : '';
+            for (var i = 0; i < arrayFiles.length; i++) {
+                var file = arrayFiles[i];
+                var filename = $('<td/>').text(file.name);
+                var filesize = $('<td/>').text(file.size ? file.size : '-');
+                var viewLink = file.webViewLink ? $('<a/>').attr('href', file.webViewLink).text('表示') : '<span/>';
+                var fileview = $('<td/>').append(viewLink);
+                var dlLink = file.webContentLink ? $('<a/>').attr('href', file.webContentLink).text('DL') : '<span/>';
+                var filedownload = $('<td/>').append(dlLink);
+                var $row = $('<tr/>').append(filename).append(filesize).append(fileview).append(filedownload);
+                $row.attr('dblclick', "getDrilldownFile('" + file.mimeType + "','" + file.id + "')");
+                $('.file-list tbody').append($row);
+                console.log(file.mimeType);
+            }
+        }
+
+        // フォルダのドリルダウン
+        function getDrilldownFile(mime, id) {
+            if (mime === 'application/vnd.google-apps.folder') {
+                clearList();
+                parentId = id;
+                getFileList(null, id).then(function (objFileList) {
+                    viewFileList(objFileList);
+                });
+            }
+        }
+
+        function clearList() {
+            $('.file-list tbody *').remove();
+        }
+
+        // 追加取得
+        function nextPage() {
+            getFileList(nextPageToken, parentId).then(function (objFileList) {
+                viewFileList(objFileList);
+            });;
+        }
+    </script>
+</head>
+
+<body>
+    <table class="table table-striped file-list">
+        <thead>
+            <th>ファイル名</th>
+            <th>サイズ</th>
+            <th>表示</th>
+            <th>ダウンロード</th>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <button type="button" onclick="nextPage();" class="next-page btn btn-primary btn-lg btn-block">次</button>
+</body>
+
+</html>
+-->

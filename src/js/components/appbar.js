@@ -6,8 +6,8 @@ export default class Appbar extends Component {
   render() {
     return (
       <div id='appbar'>
-        <Icon id='sidebar-icon' name='sidebar' size='large' onClick={( ) => this.props.onToggleMenu() }/>
-
+        <Icon id='sidebar-icon' name='sidebar' size='large' onClick={ () => this.props.onToggleMenu() }/>
+        <Icon id='options-icon' name='ellipsis vertical' size='large'/>
       </div>
     );
   }
@@ -15,4 +15,5 @@ export default class Appbar extends Component {
 
 Appbar.propTypes = {
   onToggleMenu: PropTypes.func,
+  onToggleOptions: PropTypes.func,
 };

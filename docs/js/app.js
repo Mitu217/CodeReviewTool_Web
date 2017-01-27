@@ -76222,10 +76222,18 @@ var changeMenuVisible = function changeMenuVisible(input) {
   return { type: _types2.default.MENU_VISIBLE_CHANGE, input: input };
 };
 
+// oauthTokenのstageを変更
+var changeOAuthState = function changeOAuthState(input) {
+  return { type: _types2.default.OAUTH_STATE_CHANGE, input: input };
+};
+
 /*** enabled Actoins ***/
 exports.default = {
   startup: startup,
-  changeMenuVisible: changeMenuVisible
+
+  changeMenuVisible: changeMenuVisible,
+
+  changeOAuthState: changeOAuthState
 };
 
 },{"./types":1164}],1164:[function(require,module,exports){
@@ -76237,7 +76245,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _reduxsauce = require('reduxsauce');
 
-exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n  MENU_VISIBLE_CHANGE\n');
+exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n\n  MENU_VISIBLE_CHANGE\n\n  OAUTH_STATE_CHANGE\n\n');
 
 },{"reduxsauce":960}],1165:[function(require,module,exports){
 'use strict';
@@ -76308,7 +76316,51 @@ var App = function (_Component) {
   _react2.default.createElement(App, null)
 ), document.getElementById('app'));
 
-},{"./actions":1163,"./container":1169,"./store/configureStore":1174,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
+},{"./actions":1163,"./container":1170,"./store/configureStore":1178,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _semanticUiReact = require('semantic-ui-react');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var AppLoading = function (_Component) {
+  _inherits(AppLoading, _Component);
+
+  function AppLoading() {
+    _classCallCheck(this, AppLoading);
+
+    return _possibleConstructorReturn(this, (AppLoading.__proto__ || Object.getPrototypeOf(AppLoading)).apply(this, arguments));
+  }
+
+  _createClass(AppLoading, [{
+    key: 'render',
+    value: function render() {
+      return _react2.default.createElement(_semanticUiReact.Loader, { active: true, inline: 'centered', size: 'massive' });
+    }
+  }]);
+
+  return AppLoading;
+}(_react.Component);
+
+exports.default = AppLoading;
+
+},{"react":934,"semantic-ui-react":1062}],1167:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76346,7 +76398,7 @@ var AppSidebar = function (_Component) {
       var visible = this.props.visible;
       return _react2.default.createElement(
         _semanticUiReact.Sidebar,
-        { as: _semanticUiReact.Menu, animation: 'push', visible: visible, icon: 'labeled', vertical: true, inverted: true },
+        { id: 'menu', as: _semanticUiReact.Menu, animation: 'push', visible: visible, icon: 'labeled', vertical: true, inverted: true },
         '\u30C6\u30B9\u30C8\u30E1\u30CB\u30E5\u30FC'
       );
     }
@@ -76362,7 +76414,7 @@ AppSidebar.propTypes = {
   visible: _react.PropTypes.bool
 };
 
-},{"react":934,"semantic-ui-react":1062}],1167:[function(require,module,exports){
+},{"react":934,"semantic-ui-react":1062}],1168:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76404,7 +76456,8 @@ var Appbar = function (_Component) {
         { id: 'appbar' },
         _react2.default.createElement(_semanticUiReact.Icon, { id: 'sidebar-icon', name: 'sidebar', size: 'large', onClick: function onClick() {
             return _this2.props.onToggleMenu();
-          } })
+          } }),
+        _react2.default.createElement(_semanticUiReact.Icon, { id: 'options-icon', name: 'ellipsis vertical', size: 'large' })
       );
     }
   }]);
@@ -76416,10 +76469,11 @@ exports.default = Appbar;
 
 
 Appbar.propTypes = {
-  onToggleMenu: _react.PropTypes.func
+  onToggleMenu: _react.PropTypes.func,
+  onToggleOptions: _react.PropTypes.func
 };
 
-},{"react":934,"semantic-ui-react":1062}],1168:[function(require,module,exports){
+},{"react":934,"semantic-ui-react":1062}],1169:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76434,6 +76488,10 @@ var _react2 = _interopRequireDefault(_react);
 
 var _semanticUiReact = require('semantic-ui-react');
 
+var _drive = require('../lib/drive');
+
+var _drive2 = _interopRequireDefault(_drive);
+
 var _appbar = require('./appbar');
 
 var _appbar2 = _interopRequireDefault(_appbar);
@@ -76442,9 +76500,9 @@ var _appSidebar = require('./appSidebar');
 
 var _appSidebar2 = _interopRequireDefault(_appSidebar);
 
-var _oauthDrive = require('../lib/oauthDrive');
+var _appLoading = require('./appLoading');
 
-var _oauthDrive2 = _interopRequireDefault(_oauthDrive);
+var _appLoading2 = _interopRequireDefault(_appLoading);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -76460,50 +76518,87 @@ var Main = function (_Component) {
   function Main() {
     _classCallCheck(this, Main);
 
-    return _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).apply(this, arguments));
+    // TODO willmountの方が良い？
+    // check authenticate
+    var _this = _possibleConstructorReturn(this, (Main.__proto__ || Object.getPrototypeOf(Main)).call(this));
+
+    _drive2.default.checkOauth().then(function () {
+      return _this.authSuccess();
+    }, function () {
+      return _this.authFailure();
+    });
+    return _this;
   }
 
   _createClass(Main, [{
-    key: 'toggleMenu',
-    value: function toggleMenu() {
-      var nextVisible = !this.props.menuVisible;
-      this.props.onChangeMenuVisible(nextVisible);
+    key: 'authSuccess',
+    value: function authSuccess() {
+      this.props.onChangeOAuthState('success');
+    }
+  }, {
+    key: 'authFailure',
+    value: function authFailure() {
+      this.props.onChangeOAuthState('failure');
     }
   }, {
     key: 'render',
     value: function render() {
       var _this2 = this;
 
+      var contents = [];
+
+      switch (this.props.authState) {
+        case 'check':
+          //認証チェック中
+          contents.push(_react2.default.createElement(_appLoading2.default, { key: 'load' }));
+          break;
+
+        case 'success':
+          //認証成功
+          contents.push(_react2.default.createElement(_appbar2.default, { key: 'appbar',
+            onToggleMenu: function onToggleMenu() {
+              return _this2.toggleMenu();
+            }
+          }));
+          contents.push(_react2.default.createElement(
+            _semanticUiReact.Sidebar.Pushable,
+            { key: 'sidebar', as: _semanticUiReact.Segment },
+            _react2.default.createElement(_appSidebar2.default, {
+              visible: this.props.menuVisible
+            }),
+            _react2.default.createElement(
+              _semanticUiReact.Sidebar.Pusher,
+              null,
+              _react2.default.createElement(
+                _semanticUiReact.Segment,
+                { basic: true },
+                _react2.default.createElement(
+                  _semanticUiReact.Header,
+                  { as: 'h3' },
+                  'Application Content'
+                ),
+                _react2.default.createElement(_semanticUiReact.Image, { src: 'http://semantic-ui.com/images/wireframe/paragraph.png' })
+              )
+            )
+          ));
+          break;
+
+        case 'failure':
+          //認証失敗
+          contents = '';
+          break;
+      }
       return _react2.default.createElement(
         'div',
         null,
-        _react2.default.createElement(_appbar2.default, {
-          onToggleMenu: function onToggleMenu() {
-            return _this2.toggleMenu();
-          }
-        }),
-        _react2.default.createElement(
-          _semanticUiReact.Sidebar.Pushable,
-          { as: _semanticUiReact.Segment },
-          _react2.default.createElement(_appSidebar2.default, {
-            visible: this.props.menuVisible
-          }),
-          _react2.default.createElement(
-            _semanticUiReact.Sidebar.Pusher,
-            null,
-            _react2.default.createElement(
-              _semanticUiReact.Segment,
-              { basic: true },
-              _react2.default.createElement(
-                _semanticUiReact.Header,
-                { as: 'h3' },
-                'Application Content'
-              ),
-              _react2.default.createElement(_semanticUiReact.Image, { src: 'http://semantic-ui.com/images/wireframe/paragraph.png' })
-            )
-          )
-        )
+        contents
       );
+    }
+  }, {
+    key: 'toggleMenu',
+    value: function toggleMenu() {
+      var nextVisible = !this.props.menuVisible;
+      this.props.onChangeMenuVisible(nextVisible);
     }
   }]);
 
@@ -76514,11 +76609,13 @@ exports.default = Main;
 
 
 Main.propTypes = {
-  onChangeMenuVisible: _react.PropTypes.func,
-  menuVisible: _react.PropTypes.bool
+  authState: _react.PropTypes.string,
+  onChangeOAuthState: _react.PropTypes.func,
+  menuVisible: _react.PropTypes.bool,
+  onChangeMenuVisible: _react.PropTypes.func
 };
 
-},{"../lib/oauthDrive":1170,"./appSidebar":1166,"./appbar":1167,"react":934,"semantic-ui-react":1062}],1169:[function(require,module,exports){
+},{"../lib/drive":1172,"./appLoading":1166,"./appSidebar":1167,"./appbar":1168,"react":934,"semantic-ui-react":1062}],1170:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76546,27 +76643,37 @@ var Container = function Container(props) {
     'div',
     null,
     _react2.default.createElement(_main2.default, {
+      authState: props.authState,
+      onChangeOAuthState: function onChangeOAuthState(input) {
+        return props.changeOAuthState(input);
+      },
+      menuVisible: props.meunVisible,
       onChangeMenuVisible: function onChangeMenuVisible(input) {
         return props.changeMenuVisible(input);
-      },
-      menuVisible: props.meunVisible
+      }
     })
   );
 };
 
 Container.propTypes = {
-  changeMenuSetting: _react.PropTypes.func,
-  menuVisible: _react.PropTypes.bool
+  authState: _react.PropTypes.string,
+  changeOAuthState: _react.PropTypes.func,
+  menuVisible: _react.PropTypes.bool,
+  changeMenuVisible: _react.PropTypes.func
 };
 
 var mapStateToProps = function mapStateToProps(state) {
   return {
+    authState: state.auth.state,
     meunVisible: state.menu.visible
   };
 };
 
 var mapDispatchToProps = function mapDispatchToProps(dispatch) {
   return {
+    changeOAuthState: function changeOAuthState(input) {
+      return dispatch(_actions2.default.changeOAuthState(input));
+    },
     changeMenuVisible: function changeMenuVisible(input) {
       return dispatch(_actions2.default.changeMenuVisible(input));
     }
@@ -76575,10 +76682,136 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 
 exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(Container);
 
-},{"../actions":1163,"../components/main":1168,"react":934,"react-redux":904}],1170:[function(require,module,exports){
-"use strict";
+},{"../actions":1163,"../components/main":1169,"react":934,"react-redux":904}],1171:[function(require,module,exports){
+'use strict';
 
-},{}],1171:[function(require,module,exports){
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var clientId = '629393106275-jnod8al0nghvefhublb28kj8pd70to06.apps.googleusercontent.com';
+var scope = ['https://www.googleapis.com/auth/drive'];
+
+exports.clientId = clientId;
+exports.scope = scope;
+
+},{}],1172:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _config = require('./config');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var oauthToken = '';
+
+var Drive = function () {
+  function Drive() {
+    _classCallCheck(this, Drive);
+  }
+
+  _createClass(Drive, [{
+    key: 'checkOauth',
+
+
+    // Google認証のチェック
+    value: function checkOauth() {
+      var authParams = {
+        'client_id': _config.clientId,
+        'scope': _config.scope,
+        'immediate': true
+      };
+      var promise = new Promise(function (resolve, reject) {
+        window.gapi.load('auth', {
+          'callback': function callback() {
+            window.gapi.auth.authorize(authParams, function (authResult) {
+              if (authResult && !authResult.error) {
+                // auth success.
+                oauthToken = authResult.access_token;
+                resolve();
+              } else {
+                // auth failed.
+                reject();
+              }
+            });
+          }
+        });
+      });
+      return promise;
+    }
+
+    // Google認証
+
+  }, {
+    key: 'authOauth',
+    value: function authOauth() {
+      var authParams = {
+        'client_id': _config.clientId,
+        'scope': _config.scope,
+        'immediate': false
+      };
+      var promise = new Promise(function (resolve, reject) {
+        window.gapi.load('auth', {
+          'callback': function callback() {
+            window.gapi.auth.authorize(authParams, function (authResult) {
+              if (authResult && !authResult.error) {
+                resolve(authResult.access_token);
+              }
+            });
+          }
+        });
+      });
+      return promise;
+    }
+  }]);
+
+  return Drive;
+}();
+
+var drive = new Drive();
+exports.default = drive;
+
+},{"./config":1171}],1173:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.INITIAL_STATE = undefined;
+
+var _reduxsauce = require('reduxsauce');
+
+var _seamlessImmutable = require('seamless-immutable');
+
+var _seamlessImmutable2 = _interopRequireDefault(_seamlessImmutable);
+
+var _types = require('../actions/types');
+
+var _types2 = _interopRequireDefault(_types);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var INITIAL_STATE = exports.INITIAL_STATE = (0, _seamlessImmutable2.default)({
+  state: 'check'
+});
+
+var changeOAuthState = function changeOAuthState(state, action) {
+  return state.merge({
+    state: action.input
+  });
+};
+
+var ACTION_HANDLERS = _defineProperty({}, _types2.default.OAUTH_STATE_CHANGE, changeOAuthState);
+
+exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
+
+},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1174:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76587,6 +76820,10 @@ Object.defineProperty(exports, "__esModule", {
 
 var _redux = require('redux');
 
+var _auth = require('./auth');
+
+var _auth2 = _interopRequireDefault(_auth);
+
 var _menu = require('./menu');
 
 var _menu2 = _interopRequireDefault(_menu);
@@ -76594,12 +76831,13 @@ var _menu2 = _interopRequireDefault(_menu);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var rootReducer = (0, _redux.combineReducers)({
+  auth: _auth2.default,
   menu: _menu2.default
 });
 
 exports.default = rootReducer;
 
-},{"./menu":1172,"redux":958}],1172:[function(require,module,exports){
+},{"./auth":1173,"./menu":1175,"redux":958}],1175:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76635,7 +76873,7 @@ var ACTION_HANDLERS = _defineProperty({}, _types2.default.MENU_VISIBLE_CHANGE, c
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1173:[function(require,module,exports){
+},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1176:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76643,35 +76881,25 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = rootSaga;
 
-var _reduxSaga = require('redux-saga');
-
 var _effects = require('redux-saga/effects');
 
-var _actions = require('../actions');
+var _startup = require('./startup');
 
-var _actions2 = _interopRequireDefault(_actions);
-
-var _types = require('../actions/types');
-
-var _types2 = _interopRequireDefault(_types);
+var _startup2 = _interopRequireDefault(_startup);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var _marked = [rootSaga].map(regeneratorRuntime.mark);
-
-//import { repo }from '../selectors/input';
-
-/*
-export function* checkTargetRepo() {
-  const repoInput = yield select(repo);
-}
-*/
 
 function rootSaga() {
   return regeneratorRuntime.wrap(function rootSaga$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
+          _context.next = 2;
+          return (0, _effects.fork)(_startup2.default);
+
+        case 2:
         case 'end':
           return _context.stop();
       }
@@ -76679,7 +76907,41 @@ function rootSaga() {
   }, _marked[0], this);
 }
 
-},{"../actions":1163,"../actions/types":1164,"redux-saga":942,"redux-saga/effects":940}],1174:[function(require,module,exports){
+},{"./startup":1177,"redux-saga/effects":940}],1177:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = watcher;
+
+var _effects = require('redux-saga/effects');
+
+var _types = require('../actions/types');
+
+var _types2 = _interopRequireDefault(_types);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _marked = [watcher].map(regeneratorRuntime.mark);
+
+function watcher() {
+  return regeneratorRuntime.wrap(function watcher$(_context) {
+    while (1) {
+      switch (_context.prev = _context.next) {
+        case 0:
+          _context.next = 2;
+          return (0, _effects.take)(_types2.default.STARTUP);
+
+        case 2:
+        case 'end':
+          return _context.stop();
+      }
+    }
+  }, _marked[0], this);
+}
+
+},{"../actions/types":1164,"redux-saga/effects":940}],1178:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76719,4 +76981,4 @@ exports.default = function (initialState) {
   return store;
 };
 
-},{"../reducers":1171,"../sagas":1173,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
+},{"../reducers":1174,"../sagas":1176,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);

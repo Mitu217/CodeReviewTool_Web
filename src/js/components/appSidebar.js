@@ -6,7 +6,7 @@ export default class AppSidebar extends Component {
   render() {
     const visible = this.props.visible;
     return (
-      <Sidebar as={Menu} animation='push' visible={visible} icon='labeled' vertical inverted>
+      <Sidebar id='menu' as={Menu} animation='push' visible={visible} icon='labeled' vertical inverted>
         テストメニュー
       </Sidebar>
     );
