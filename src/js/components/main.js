@@ -1,11 +1,11 @@
-import React, { Component, PropTypes } from 'react'
-import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react'
+import React, { Component, PropTypes } from 'react';
+import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
 
 import Drive from '../lib/drive';
 
-import Appbar from './appbar';
-import AppSidebar from './appSidebar';
 import AppLoading from './appLoading';
+import Appbar from './appbar';
+import Contents from './contents';
 
 export default class Main extends Component {
 
@@ -20,7 +20,10 @@ export default class Main extends Component {
     );
   }
   authSuccess() {
-    this.props.onChangeOAuthState('success');
+    Drive.loadGoogleDrive().then(
+      () => this.props.onChangeOAuthState('success'),
+      () => this.authFailure()
+    );
   }
   authFailure() {
     this.props.onChangeOAuthState('failure');
@@ -43,17 +46,11 @@ export default class Main extends Component {
           />
         );
         contents.push(
-          <Sidebar.Pushable key='sidebar' as={Segment}>
-            <AppSidebar
-              visible={ this.props.menuVisible }
-            />
-            <Sidebar.Pusher>
-              <Segment basic>
-                <Header as='h3'>Application Content</Header>
-                <Image src='http://semantic-ui.com/images/wireframe/paragraph.png' />
-              </Segment>
-            </Sidebar.Pusher>
-          </Sidebar.Pushable>
+          <Contents key='contents'
+            menuVisible={ this.props.menuVisible }
+            menuShowFiles={ this.props.menuShowFiles }
+            onChangeMenuShowFiles={ input => this.props.onChangeMenuShowFiles(input) }
+          />
         );
         break;
 
@@ -74,6 +71,9 @@ export default class Main extends Component {
 Main.propTypes = {
   authState: PropTypes.string,
   onChangeOAuthState: PropTypes.func,
+
   menuVisible: PropTypes.bool,
+  menuShowFiles: PropTypes.array,
   onChangeMenuVisible: PropTypes.func,
+  onChangeMenuShowFiles: PropTypes.func,
 };

@@ -125,18 +125,6 @@
 </html>
 
 <!--
-<!DOCTYPE html>
-<html lang="ja">
-
-<head>
-    <title>get google drive files sample</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://apis.google.com/js/client.js"></script>
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
-        crossorigin="anonymous"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-        crossorigin="anonymous">
     <script>
         var googleDriveClient;
         var nextPageToken;
@@ -148,72 +136,6 @@
             });
         });
 
-        // load google drive client
-        function loadGoogleDrive() {
-            var p = new Promise(function (resolve, reject) {
-                try {
-                    window.gapi.client.load('drive', 'v3', fncOnDriveApiLoad);
-                } catch (e) {
-                    reject(e);
-                }
-
-                function fncOnDriveApiLoad() {
-                    resolve(window.gapi.client);
-                }
-            });
-            return p;
-        }
-
-        // authorize google
-        function getGoogleAuth() {
-            var objAuthParam = {
-                'client_id': '629393106275-jnod8al0nghvefhublb28kj8pd70to06.apps.googleusercontent.com',
-                'scope': ['https://www.googleapis.com/auth/drive'],
-                'immediate': false
-            };
-            var p = new Promise(function (resolve, reject) {
-                window.gapi.load('auth', {
-                    'callback': function () {
-                        window.gapi.auth.authorize(
-                            objAuthParam,
-                            authResult);
-                    }
-                });
-
-                function authResult(objAuthResult) {
-                    if (objAuthResult && !objAuthResult.error) {
-                        resolve(objAuthResult.access_token);
-                    } else {
-                        // auth failed.
-                        reject(objAuthResult);
-                    }
-                }
-            });
-            return p;
-        }
-
-        // get drive file list
-        function getFileList(strPageToken, strParentId) {
-            var objParam = {
-                pageSize: 100,
-                orderBy: '',
-                q: 'trashed=false',
-                fields: 'files(id, name, kind, size, mimeType, lastModifyingUser, modifiedTime, iconLink, owners, folderColorRgb, shared, webViewLink, webContentLink), nextPageToken'
-            };
-            if (strParentId) {
-                objParam.q += ' and ' + '"' + strParentId + '" in parents';
-            }
-            if (strPageToken) {
-                objParam.pageToken = strPageToken;
-            }
-            var p = new Promise(function (resolve, reject) {
-                var objReq = googleDriveClient.drive.files.list(objParam);
-                objReq.execute(function (resp) {
-                    resolve(resp);
-                });
-            });
-            return p;
-        }
 
         // ファイルの一覧表示
         function viewFileList(objFileList) {
@@ -258,20 +180,4 @@
         }
     </script>
 </head>
-
-<body>
-    <table class="table table-striped file-list">
-        <thead>
-            <th>ファイル名</th>
-            <th>サイズ</th>
-            <th>表示</th>
-            <th>ダウンロード</th>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
-    <button type="button" onclick="nextPage();" class="next-page btn btn-primary btn-lg btn-block">次</button>
-</body>
-
-</html>
 -->
