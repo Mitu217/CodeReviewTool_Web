@@ -11,7 +11,14 @@ export default class Contents extends Component {
           <AppSidebar
             visible={ this.props.menuVisible }
             showFiles={ this.props.menuShowFiles }
+            selectFile={ this.props.menuSelectFile }
+            openedFile={ this.props.editOpenedFile }
+            currentDirIds={ this.props.menuCurrentDirIds }
+            currentDirNames={ this.props.menuCurrentDirNames }
             onChangeShowFiles={ input => this.props.onChangeMenuShowFiles(input) }
+            onChangeSelectFile={ input => this.props.onChangeMenuSelectFile(input) }
+            onChangeOpenedFile={ input => this.props.onChangeEditOpenedFile(input) }
+            onChangeCurrentDir={ (name, id) => this.props.onChangeMenuCurrentDir(name, id) }
           />
           <Sidebar.Pusher>
             <Segment basic>
@@ -28,5 +35,13 @@ export default class Contents extends Component {
 Contents.propTypes = {
   menuVisible: PropTypes.bool,
   menuShowFiles: PropTypes.array,
+  menuSelectFile: PropTypes.string,
+  menuCurrentDirIds: PropTypes.array,
+  menuCurrentDirNames: PropTypes.array,
   onChangeMenuShowFiles: PropTypes.func,
+  onChangeMenuSelectFile: PropTypes.func,
+  onChangeMenuCurrentDir: PropTypes.func,
+
+  editOpenedFile: PropTypes.string,
+  onChangeEditOpenedFile: PropTypes.func,
 };

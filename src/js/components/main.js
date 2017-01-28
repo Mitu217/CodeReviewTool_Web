@@ -49,7 +49,12 @@ export default class Main extends Component {
           <Contents key='contents'
             menuVisible={ this.props.menuVisible }
             menuShowFiles={ this.props.menuShowFiles }
+            menuSelectFile={ this.props.menuSelectFile }
+            menuCurrentDirNames={ this.props.menuCurrentDirNames }
+            menuCurrentDirIds={ this.props.menuCurrentDirIds }
             onChangeMenuShowFiles={ input => this.props.onChangeMenuShowFiles(input) }
+            onChangeMenuSelectFile={ input => this.props.onChangeMenuSelectFile(input) }
+            onChangeMenuCurrentDir={ (name, id) => this.props.onChangeMenuCurrentDir(name, id) }
           />
         );
         break;
@@ -74,6 +79,14 @@ Main.propTypes = {
 
   menuVisible: PropTypes.bool,
   menuShowFiles: PropTypes.array,
+  menuSelectFile: PropTypes.string,
+  menuCurrentDirNames: PropTypes.array,
+  menuCurrentDirIds: PropTypes.array,
   onChangeMenuVisible: PropTypes.func,
   onChangeMenuShowFiles: PropTypes.func,
+  onChangeMenuSelectFile: PropTypes.func,
+  onChangeMenuCurrentDir: PropTypes.func,
+
+  editOpenedFile: PropTypes.string,
+  onChangeEditOpenedFile: PropTypes.func,
 };

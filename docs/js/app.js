@@ -76225,6 +76225,19 @@ var changeMenuVisible = function changeMenuVisible(input) {
 var changeMenuShowFiles = function changeMenuShowFiles(input) {
   return { type: _types2.default.MENU_SHOW_FILES_CHANGE, input: input };
 };
+// 選択しているファイルの変更
+var changeMenuSelectFile = function changeMenuSelectFile(input) {
+  return { type: _types2.default.MENU_SELECT_FILE_CHANGE, input: input };
+};
+// 表示しているディレクトリの変更
+var changeMenuCurrentDir = function changeMenuCurrentDir(names, ids) {
+  return { type: _types2.default.MENU_CURRENT_DIR_CHANGE, names: names, ids: ids };
+};
+
+// 開いているファイルの変更
+var changeEditOpenedFile = function changeEditOpenedFile(input) {
+  return { type: _types2.default.EDIT_OPENED_FILE_CHANGE, input: input };
+};
 
 // oauthTokenのstageを変更
 var changeOAuthState = function changeOAuthState(input) {
@@ -76236,9 +76249,14 @@ exports.default = {
   //Init
   startup: startup,
 
-  //Sidebar
+  //menu
   changeMenuVisible: changeMenuVisible,
   changeMenuShowFiles: changeMenuShowFiles,
+  changeMenuSelectFile: changeMenuSelectFile,
+  changeMenuCurrentDir: changeMenuCurrentDir,
+
+  //editer
+  changeEditOpenedFile: changeEditOpenedFile,
 
   //Auth
   changeOAuthState: changeOAuthState
@@ -76253,7 +76271,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _reduxsauce = require('reduxsauce');
 
-exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n\n  MENU_VISIBLE_CHANGE\n  MENU_SHOW_FILES_CHANGE\n\n  OAUTH_STATE_CHANGE\n\n');
+exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n\n  OAUTH_STATE_CHANGE\n\n  MENU_VISIBLE_CHANGE\n  MENU_SHOW_FILES_CHANGE\n  MENU_SELECT_FILE_CHANGE\n  MENU_CURRENT_DIR_CHANGE\n\n  EDIT_OPENED_FILE_CHANGE\n');
 
 },{"reduxsauce":960}],1165:[function(require,module,exports){
 'use strict';
@@ -76324,7 +76342,7 @@ var App = function (_Component) {
   _react2.default.createElement(App, null)
 ), document.getElementById('app'));
 
-},{"./actions":1163,"./container":1172,"./store/configureStore":1180,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
+},{"./actions":1163,"./container":1172,"./store/configureStore":1181,"babel-polyfill":1,"react":934,"react-dom":768,"react-redux":904}],1166:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76409,24 +76427,52 @@ var AppSidebar = function (_Component) {
   function AppSidebar() {
     _classCallCheck(this, AppSidebar);
 
-    // ファイルリストの取得
     var _this = _possibleConstructorReturn(this, (AppSidebar.__proto__ || Object.getPrototypeOf(AppSidebar)).call(this));
 
-    _drive2.default.getFileList().then(function (res) {
-      _this.props.onChangeShowFiles(res.files);
-    }, function (e) {
-      console.log(e);
-    });
+    var cacheParentIds = localStorage.getItem('currentParentId');
+    var cacheParentNames = localStorage.getItem('currentParentName');
+    if (cacheParentIds) {
+      cacheParentIds = cacheParentIds.split(',');
+    } else {
+      cacheParentIds = ['root'];
+    }
+    if (cacheParentNames) {
+      cacheParentNames = cacheParentNames.split(',');
+    } else {
+      cacheParentNames = ['マイドライブ'];
+    }
+    _this.getFileList(cacheParentNames, cacheParentIds);
     return _this;
   }
 
   _createClass(AppSidebar, [{
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
       var menuContents = [];
       if (this.props.showFiles) {
         menuContents.push(_react2.default.createElement(_filelist2.default, { key: 'file-list',
-          files: this.props.showFiles
+          files: this.props.showFiles,
+          selectFile: this.props.selectFile,
+          openedFile: this.props.openedFile,
+          currentDirIds: this.props.currentDirIds,
+          currentDirNames: this.props.currentDirNames,
+          onChangeShowFiles: function onChangeShowFiles(input) {
+            return _this2.props.onChangeShowFiles(input);
+          },
+          onChangeSelectFile: function onChangeSelectFile(input) {
+            return _this2.props.onChangeSelectFile(input);
+          },
+          onChangeOpenedFile: function onChangeOpenedFile(input) {
+            return _this2.props.onChangeOpenedFile(input);
+          },
+          onChangeCurrentDir: function onChangeCurrentDir(name, id) {
+            return _this2.props.onChangeCurrentDir(name, id);
+          },
+          getFileList: function getFileList(name, id) {
+            return _this2.getFileList(name, id);
+          }
         }));
       } else {
         menuContents.push(_react2.default.createElement(_appLoading2.default, { key: 'load' }));
@@ -76439,6 +76485,25 @@ var AppSidebar = function (_Component) {
         menuContents
       );
     }
+  }, {
+    key: 'getFileList',
+    value: function getFileList() {
+      var _this3 = this;
+
+      var parentNames = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var parentIds = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+
+      _drive2.default.getFileList(parentIds[parentIds.length - 1]).then(function (res) {
+        /* 非同期処理になったらsagaへもっていく部分 */
+        localStorage.setItem('currentParentId', parentIds.join(','));
+        localStorage.setItem('currentParentName', parentNames.join(','));
+        _this3.props.onChangeCurrentDir(parentNames, parentIds);
+        /**************************************/
+        _this3.props.onChangeShowFiles(res.files);
+      }, function (e) {
+        console.log(e);
+      });
+    }
   }]);
 
   return AppSidebar;
@@ -76450,7 +76515,15 @@ exports.default = AppSidebar;
 AppSidebar.propTypes = {
   visible: _react.PropTypes.bool,
   showFiles: _react.PropTypes.array,
-  onChangeShowFiles: _react.PropTypes.func
+  selectFile: _react.PropTypes.string,
+  openedFile: _react.PropTypes.string,
+  currentDirNames: _react.PropTypes.array,
+  currentDirIds: _react.PropTypes.array,
+
+  onChangeShowFiles: _react.PropTypes.func,
+  onChangeSelectFile: _react.PropTypes.func,
+  onChangeOpenedFile: _react.PropTypes.func,
+  onChangeCurrentDir: _react.PropTypes.func
 };
 
 },{"../lib/drive":1174,"./appLoading":1166,"./filelist":1170,"react":934,"semantic-ui-react":1062}],1168:[function(require,module,exports){
@@ -76562,8 +76635,21 @@ var Contents = function (_Component) {
           _react2.default.createElement(_appSidebar2.default, {
             visible: this.props.menuVisible,
             showFiles: this.props.menuShowFiles,
+            selectFile: this.props.menuSelectFile,
+            openedFile: this.props.editOpenedFile,
+            currentDirIds: this.props.menuCurrentDirIds,
+            currentDirNames: this.props.menuCurrentDirNames,
             onChangeShowFiles: function onChangeShowFiles(input) {
               return _this2.props.onChangeMenuShowFiles(input);
+            },
+            onChangeSelectFile: function onChangeSelectFile(input) {
+              return _this2.props.onChangeMenuSelectFile(input);
+            },
+            onChangeOpenedFile: function onChangeOpenedFile(input) {
+              return _this2.props.onChangeEditOpenedFile(input);
+            },
+            onChangeCurrentDir: function onChangeCurrentDir(name, id) {
+              return _this2.props.onChangeMenuCurrentDir(name, id);
             }
           }),
           _react2.default.createElement(
@@ -76594,7 +76680,15 @@ exports.default = Contents;
 Contents.propTypes = {
   menuVisible: _react.PropTypes.bool,
   menuShowFiles: _react.PropTypes.array,
-  onChangeMenuShowFiles: _react.PropTypes.func
+  menuSelectFile: _react.PropTypes.string,
+  menuCurrentDirIds: _react.PropTypes.array,
+  menuCurrentDirNames: _react.PropTypes.array,
+  onChangeMenuShowFiles: _react.PropTypes.func,
+  onChangeMenuSelectFile: _react.PropTypes.func,
+  onChangeMenuCurrentDir: _react.PropTypes.func,
+
+  editOpenedFile: _react.PropTypes.string,
+  onChangeEditOpenedFile: _react.PropTypes.func
 };
 
 },{"./appSidebar":1167,"react":934,"semantic-ui-react":1062}],1170:[function(require,module,exports){
@@ -76612,6 +76706,10 @@ var _react2 = _interopRequireDefault(_react);
 
 var _semanticUiReact = require('semantic-ui-react');
 
+var _drive = require('../lib/drive');
+
+var _drive2 = _interopRequireDefault(_drive);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -76619,6 +76717,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var clicked = false;
 
 var FileList = function (_Component) {
   _inherits(FileList, _Component);
@@ -76632,10 +76732,22 @@ var FileList = function (_Component) {
   _createClass(FileList, [{
     key: 'render',
     value: function render() {
+      var _this2 = this;
+
       var list = [];
       var files = this.props.files;
+      var select = this.props.selectFile;
 
-      // ルートディレクトリでなければ../ボタンを作る
+      if (this.props.currentDirNames.length > 1) {
+        list.push(_react2.default.createElement(
+          _semanticUiReact.Menu.Item,
+          { name: 'inbox', key: 'back', onClick: function onClick() {
+              return _this2.onSelectBack();
+            } },
+          'Back'
+        ));
+      }
+
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         switch (file.mimeType) {
@@ -76643,16 +76755,20 @@ var FileList = function (_Component) {
             //ディレクトリ
             list.push(_react2.default.createElement(
               _semanticUiReact.Menu.Item,
-              { name: 'inbox', key: file.id, 'data-id': file.id },
+              { name: 'inbox', active: select === file.id, key: file.id, 'data-id': file.id, 'data-name': file.name, onClick: function onClick(e) {
+                  return _this2.onSelectItem(e);
+                } },
               _react2.default.createElement(_semanticUiReact.Image, { src: file.iconLink, size: 'mini' }),
               file.name
             ));
             break;
           case 'application/vnd.google-apps.drive-sdk.629393106275':
-            //アプリ用ファイル
+            //専用ファイル
             list.push(_react2.default.createElement(
               _semanticUiReact.Menu.Item,
-              { name: 'inbox', key: file.id, 'data-id': file.id },
+              { name: 'inbox', active: select === file.id, key: file.id, 'data-id': file.id, 'data-name': file.name, onClick: function onClick(e) {
+                  return _this2.onSelectItem(e);
+                } },
               _react2.default.createElement(_semanticUiReact.Image, { src: file.iconLink, size: 'mini' }),
               file.name
             ));
@@ -76667,6 +76783,37 @@ var FileList = function (_Component) {
         list
       );
     }
+  }, {
+    key: 'onSelectItem',
+    value: function onSelectItem(e) {
+      var id = e.target.getAttribute('data-id');
+      var name = e.target.getAttribute('data-name');
+      if (clicked) {
+        //double click
+        var currentDirIds = [].concat(this.props.currentDirIds);
+        var currentDirNames = [].concat(this.props.currentDirNames);
+        currentDirIds.push(id);
+        currentDirNames.push(name);
+        this.props.getFileList(currentDirNames, currentDirIds);
+        clicked = false;
+      } else {
+        //single click
+        this.props.onChangeSelectFile(id);
+        clicked = true;
+        setTimeout(function () {
+          clicked = false;
+        }, 200);
+      }
+    }
+  }, {
+    key: 'onSelectBack',
+    value: function onSelectBack() {
+      var currentDirIds = [].concat(this.props.currentDirIds);
+      var currentDirNames = [].concat(this.props.currentDirNames);
+      currentDirIds.pop();
+      currentDirNames.pop();
+      this.props.getFileList(currentDirNames, currentDirIds);
+    }
   }]);
 
   return FileList;
@@ -76676,10 +76823,18 @@ exports.default = FileList;
 
 
 FileList.propTypes = {
-  files: _react.PropTypes.array
+  files: _react.PropTypes.array,
+  selectFile: _react.PropTypes.string,
+  openedFile: _react.PropTypes.string,
+  currentDirIds: _react.PropTypes.array,
+  currentDirNames: _react.PropTypes.array,
+  onChangeShowFiles: _react.PropTypes.func,
+  onChangeSelectFile: _react.PropTypes.func,
+  onChangeOpenedFile: _react.PropTypes.func,
+  getFileList: _react.PropTypes.func
 };
 
-},{"react":934,"semantic-ui-react":1062}],1171:[function(require,module,exports){
+},{"../lib/drive":1174,"react":934,"semantic-ui-react":1062}],1171:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -76775,8 +76930,17 @@ var Main = function (_Component) {
           contents.push(_react2.default.createElement(_contents2.default, { key: 'contents',
             menuVisible: this.props.menuVisible,
             menuShowFiles: this.props.menuShowFiles,
+            menuSelectFile: this.props.menuSelectFile,
+            menuCurrentDirNames: this.props.menuCurrentDirNames,
+            menuCurrentDirIds: this.props.menuCurrentDirIds,
             onChangeMenuShowFiles: function onChangeMenuShowFiles(input) {
               return _this3.props.onChangeMenuShowFiles(input);
+            },
+            onChangeMenuSelectFile: function onChangeMenuSelectFile(input) {
+              return _this3.props.onChangeMenuSelectFile(input);
+            },
+            onChangeMenuCurrentDir: function onChangeMenuCurrentDir(name, id) {
+              return _this3.props.onChangeMenuCurrentDir(name, id);
             }
           }));
           break;
@@ -76812,8 +76976,16 @@ Main.propTypes = {
 
   menuVisible: _react.PropTypes.bool,
   menuShowFiles: _react.PropTypes.array,
+  menuSelectFile: _react.PropTypes.string,
+  menuCurrentDirNames: _react.PropTypes.array,
+  menuCurrentDirIds: _react.PropTypes.array,
   onChangeMenuVisible: _react.PropTypes.func,
-  onChangeMenuShowFiles: _react.PropTypes.func
+  onChangeMenuShowFiles: _react.PropTypes.func,
+  onChangeMenuSelectFile: _react.PropTypes.func,
+  onChangeMenuCurrentDir: _react.PropTypes.func,
+
+  editOpenedFile: _react.PropTypes.string,
+  onChangeEditOpenedFile: _react.PropTypes.func
 };
 
 },{"../lib/drive":1174,"./appLoading":1166,"./appbar":1168,"./contents":1169,"react":934,"semantic-ui-react":1062}],1172:[function(require,module,exports){
@@ -76848,13 +77020,28 @@ var Container = function Container(props) {
       onChangeOAuthState: function onChangeOAuthState(input) {
         return props.changeOAuthState(input);
       },
+
       menuVisible: props.meunVisible,
       menuShowFiles: props.menuShowFiles,
+      menuSelectFile: props.menuSelectFile,
+      menuCurrentDirNames: props.menuCurrentDirNames,
+      menuCurrentDirIds: props.menuCurrentDirIds,
       onChangeMenuVisible: function onChangeMenuVisible(input) {
         return props.changeMenuVisible(input);
       },
       onChangeMenuShowFiles: function onChangeMenuShowFiles(input) {
         return props.changeMenuShowFiles(input);
+      },
+      onChangeMenuSelectFile: function onChangeMenuSelectFile(input) {
+        return props.changeMenuSelectFile(input);
+      },
+      onChangeMenuCurrentDir: function onChangeMenuCurrentDir(names, ids) {
+        return props.changeMenuCurrentDir(names, ids);
+      },
+
+      editOpenedFile: props.editOpenedFile,
+      onChangeEditOpenedFile: function onChangeEditOpenedFile(input) {
+        return props.changeEditOpenedFile(input);
       }
     })
   );
@@ -76866,15 +77053,29 @@ Container.propTypes = {
 
   menuVisible: _react.PropTypes.bool,
   menuShowFiles: _react.PropTypes.array,
+  menuSelectFile: _react.PropTypes.string,
+  menuCurrentDirNames: _react.PropTypes.array,
+  menuCurrentDirIds: _react.PropTypes.array,
   changeMenuVisible: _react.PropTypes.func,
-  changeMenuShowFiles: _react.PropTypes.func
+  changeMenuShowFiles: _react.PropTypes.func,
+  changeMenuSelectFile: _react.PropTypes.func,
+  changeMenuCurrentDir: _react.PropTypes.func,
+
+  editOpenedFile: _react.PropTypes.string,
+  changeEditOpenedFile: _react.PropTypes.func
 };
 
 var mapStateToProps = function mapStateToProps(state) {
   return {
     authState: state.auth.state,
+
     meunVisible: state.menu.visible,
-    menuShowFiles: state.menu.files
+    menuShowFiles: state.menu.files,
+    menuSelectFile: state.menu.selectFile,
+    menuCurrentDirNames: state.menu.currentDirNames,
+    menuCurrentDirIds: state.menu.currentDirIds,
+
+    editOpenedFile: state.edit.openedFile
   };
 };
 
@@ -76883,11 +77084,22 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
     changeOAuthState: function changeOAuthState(input) {
       return dispatch(_actions2.default.changeOAuthState(input));
     },
+
     changeMenuVisible: function changeMenuVisible(input) {
       return dispatch(_actions2.default.changeMenuVisible(input));
     },
     changeMenuShowFiles: function changeMenuShowFiles(input) {
       return dispatch(_actions2.default.changeMenuShowFiles(input));
+    },
+    changeMenuSelectFile: function changeMenuSelectFile(input) {
+      return dispatch(_actions2.default.changeMenuSelectFile(input));
+    },
+    changeMenuCurrentDir: function changeMenuCurrentDir(names, ids) {
+      return dispatch(_actions2.default.changeMenuCurrentDir(names, ids));
+    },
+
+    changeEditOpenedFile: function changeEditOpenedFile(input) {
+      return dispatch(_actions2.default.changeEditOpenedFile(input));
     }
   };
 };
@@ -76910,7 +77122,7 @@ exports.scope = scope;
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -76923,112 +77135,113 @@ var oauthToken = void 0,
     client = void 0;
 
 var Drive = function () {
-    function Drive() {
-        _classCallCheck(this, Drive);
+  function Drive() {
+    _classCallCheck(this, Drive);
+  }
+
+  _createClass(Drive, [{
+    key: 'checkOauth',
+
+
+    // check authorized google
+    value: function checkOauth() {
+      var authParams = {
+        'client_id': _config.clientId,
+        'scope': _config.scope,
+        'immediate': true
+      };
+      var promise = new Promise(function (resolve, reject) {
+        window.gapi.load('auth', {
+          'callback': function callback() {
+            window.gapi.auth.authorize(authParams, function (authResult) {
+              if (authResult && !authResult.error) {
+                resolve();
+              } else {
+                reject();
+              }
+            });
+          }
+        });
+      });
+      return promise;
     }
 
-    _createClass(Drive, [{
-        key: 'checkOauth',
+    // authorize google
 
-
-        // check authorized google
-        value: function checkOauth() {
-            var authParams = {
-                'client_id': _config.clientId,
-                'scope': _config.scope,
-                'immediate': true
-            };
-            var promise = new Promise(function (resolve, reject) {
-                window.gapi.load('auth', {
-                    'callback': function callback() {
-                        window.gapi.auth.authorize(authParams, function (authResult) {
-                            if (authResult && !authResult.error) {
-                                resolve();
-                            } else {
-                                reject();
-                            }
-                        });
-                    }
-                });
+  }, {
+    key: 'authOauth',
+    value: function authOauth() {
+      var authParams = {
+        'client_id': _config.clientId,
+        'scope': _config.scope,
+        'immediate': false
+      };
+      var promise = new Promise(function (resolve, reject) {
+        window.gapi.load('auth', {
+          'callback': function callback() {
+            window.gapi.auth.authorize(authParams, function (authResult) {
+              if (authResult && !authResult.error) {
+                resolve();
+              }
             });
-            return promise;
+          }
+        });
+      });
+      return promise;
+    }
+
+    // load google drive client
+
+  }, {
+    key: 'loadGoogleDrive',
+    value: function loadGoogleDrive() {
+      var promise = new Promise(function (resolve, reject) {
+        try {
+          window.gapi.client.load('drive', 'v3', function () {
+            client = window.gapi.client;
+            resolve();
+          });
+        } catch (e) {
+          reject(e);
         }
 
-        // authorize google
+        function fncOnDriveApiLoad() {}
+      });
+      return promise;
+    }
 
-    }, {
-        key: 'authOauth',
-        value: function authOauth() {
-            var authParams = {
-                'client_id': _config.clientId,
-                'scope': _config.scope,
-                'immediate': false
-            };
-            var promise = new Promise(function (resolve, reject) {
-                window.gapi.load('auth', {
-                    'callback': function callback() {
-                        window.gapi.auth.authorize(authParams, function (authResult) {
-                            if (authResult && !authResult.error) {
-                                resolve();
-                            }
-                        });
-                    }
-                });
-            });
-            return promise;
+    // get drive file list
+
+  }, {
+    key: 'getFileList',
+    value: function getFileList(strParentId) {
+      console.log(strParentId);
+      var params = {
+        orderBy: 'folder',
+        q: 'trashed=false',
+        fields: 'files(id, name, kind, size, mimeType, lastModifyingUser, modifiedTime, iconLink, owners, folderColorRgb, shared, webViewLink, webContentLink), nextPageToken'
+      };
+      if (strParentId) {
+        params.q += ' and ' + '"' + strParentId + '" in parents';
+      } else {
+        // TODO localstorageに記録がないか取得する
+        params.q += ' and "root" in parents';
+      }
+      var promise = new Promise(function (resolve, reject) {
+        try {
+          var req = client.drive.files.list(params);
+          req.execute(function (res) {
+            resolve(res);
+          });
+        } catch (e) {
+          reject(e);
         }
+      });
+      return promise;
+    }
+  }]);
 
-        // load google drive client
-
-    }, {
-        key: 'loadGoogleDrive',
-        value: function loadGoogleDrive() {
-            var promise = new Promise(function (resolve, reject) {
-                try {
-                    window.gapi.client.load('drive', 'v3', function () {
-                        client = window.gapi.client;
-                        resolve();
-                    });
-                } catch (e) {
-                    reject(e);
-                }
-
-                function fncOnDriveApiLoad() {}
-            });
-            return promise;
-        }
-
-        // get drive file list
-
-    }, {
-        key: 'getFileList',
-        value: function getFileList(strParentId) {
-            var params = {
-                orderBy: 'folder',
-                q: 'trashed=false',
-                fields: 'files(id, name, kind, size, mimeType, lastModifyingUser, modifiedTime, iconLink, owners, folderColorRgb, shared, webViewLink, webContentLink), nextPageToken'
-            };
-            if (strParentId) {
-                params.q += ' and ' + '"' + strParentId + '" in parents';
-            } else {
-                // TODO localstorageに記録がないか取得する
-                params.q += ' and "root" in parents';
-            }
-            var promise = new Promise(function (resolve, reject) {
-                try {
-                    var req = client.drive.files.list(params);
-                    req.execute(function (res) {
-                        resolve(res);
-                    });
-                } catch (e) {
-                    reject(e);
-                }
-            });
-            return promise;
-        }
-    }]);
-
-    return Drive;
+  return Drive;
 }();
 
 var drive = new Drive();
@@ -77076,6 +77289,42 @@ exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS)
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.INITIAL_STATE = undefined;
+
+var _reduxsauce = require('reduxsauce');
+
+var _seamlessImmutable = require('seamless-immutable');
+
+var _seamlessImmutable2 = _interopRequireDefault(_seamlessImmutable);
+
+var _types = require('../actions/types');
+
+var _types2 = _interopRequireDefault(_types);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var INITIAL_STATE = exports.INITIAL_STATE = (0, _seamlessImmutable2.default)({
+  openedFile: ''
+});
+
+var changeOpenedFile = function changeOpenedFile(state, action) {
+  return state.merge({
+    openedFile: action.input
+  });
+};
+
+var ACTION_HANDLERS = _defineProperty({}, _types2.default.EDIT_OPENED_FILE_CHANGE, changeOpenedFile);
+
+exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
+
+},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1177:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
 var _redux = require('redux');
 
@@ -77087,16 +77336,21 @@ var _menu = require('./menu');
 
 var _menu2 = _interopRequireDefault(_menu);
 
+var _edit = require('./edit');
+
+var _edit2 = _interopRequireDefault(_edit);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var rootReducer = (0, _redux.combineReducers)({
   auth: _auth2.default,
-  menu: _menu2.default
+  menu: _menu2.default,
+  edit: _edit2.default
 });
 
 exports.default = rootReducer;
 
-},{"./auth":1175,"./menu":1177,"redux":958}],1177:[function(require,module,exports){
+},{"./auth":1175,"./edit":1176,"./menu":1178,"redux":958}],1178:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -77122,7 +77376,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var INITIAL_STATE = exports.INITIAL_STATE = (0, _seamlessImmutable2.default)({
   visible: true,
-  files: null
+  files: null,
+  selectFile: '',
+  currentDirNames: null,
+  currentDirIds: null
 });
 
 var changeMenuVisible = function changeMenuVisible(state, action) {
@@ -77137,11 +77394,24 @@ var changeShowFiles = function changeShowFiles(state, action) {
   });
 };
 
-var ACTION_HANDLERS = (_ACTION_HANDLERS = {}, _defineProperty(_ACTION_HANDLERS, _types2.default.MENU_VISIBLE_CHANGE, changeMenuVisible), _defineProperty(_ACTION_HANDLERS, _types2.default.MENU_SHOW_FILES_CHANGE, changeShowFiles), _ACTION_HANDLERS);
+var changeSelectFile = function changeSelectFile(state, action) {
+  return state.merge({
+    selectFile: action.input
+  });
+};
+
+var changeCurrentDir = function changeCurrentDir(state, action) {
+  return state.merge({
+    currentDirNames: action.names,
+    currentDirIds: action.ids
+  });
+};
+
+var ACTION_HANDLERS = (_ACTION_HANDLERS = {}, _defineProperty(_ACTION_HANDLERS, _types2.default.MENU_VISIBLE_CHANGE, changeMenuVisible), _defineProperty(_ACTION_HANDLERS, _types2.default.MENU_SHOW_FILES_CHANGE, changeShowFiles), _defineProperty(_ACTION_HANDLERS, _types2.default.MENU_SELECT_FILE_CHANGE, changeSelectFile), _defineProperty(_ACTION_HANDLERS, _types2.default.MENU_CURRENT_DIR_CHANGE, changeCurrentDir), _ACTION_HANDLERS);
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1178:[function(require,module,exports){
+},{"../actions/types":1164,"reduxsauce":960,"seamless-immutable":962}],1179:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -77175,7 +77445,7 @@ function rootSaga() {
   }, _marked[0], this);
 }
 
-},{"./startup":1179,"redux-saga/effects":940}],1179:[function(require,module,exports){
+},{"./startup":1180,"redux-saga/effects":940}],1180:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -77209,7 +77479,7 @@ function watcher() {
   }, _marked[0], this);
 }
 
-},{"../actions/types":1164,"redux-saga/effects":940}],1180:[function(require,module,exports){
+},{"../actions/types":1164,"redux-saga/effects":940}],1181:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -77249,4 +77519,4 @@ exports.default = function (initialState) {
   return store;
 };
 
-},{"../reducers":1176,"../sagas":1178,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);
+},{"../reducers":1177,"../sagas":1179,"redux":958,"redux-logger":939,"redux-saga":942}]},{},[1165]);

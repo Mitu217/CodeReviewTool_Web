@@ -69,28 +69,29 @@ class Drive {
 
   // get drive file list
   getFileList(strParentId) {
-      var params = {
-          orderBy: 'folder',
-          q: 'trashed=false',
-          fields: 'files(id, name, kind, size, mimeType, lastModifyingUser, modifiedTime, iconLink, owners, folderColorRgb, shared, webViewLink, webContentLink), nextPageToken'
-      };
-      if (strParentId) {
-          params.q += ' and ' + '"' + strParentId + '" in parents';
-      } else {
-          // TODO localstorageに記録がないか取得する
-          params.q += ' and "root" in parents';
+    console.log(strParentId);
+    var params = {
+      orderBy: 'folder',
+      q: 'trashed=false',
+      fields: 'files(id, name, kind, size, mimeType, lastModifyingUser, modifiedTime, iconLink, owners, folderColorRgb, shared, webViewLink, webContentLink), nextPageToken'
+    };
+    if (strParentId) {
+      params.q += ' and ' + '"' + strParentId + '" in parents';
+    } else {
+      // TODO localstorageに記録がないか取得する
+      params.q += ' and "root" in parents';
+    }
+    var promise = new Promise(function (resolve, reject) {
+      try {
+        var req = client.drive.files.list(params);
+        req.execute((res) => {
+            resolve(res);
+        });
+      } catch (e) {
+        reject(e);
       }
-      var promise = new Promise(function (resolve, reject) {
-        try {
-          var req = client.drive.files.list(params);
-          req.execute((res) => {
-              resolve(res);
-          });
-        } catch (e) {
-          reject(e);
-        }
-      });
-      return promise;
+    });
+    return promise;
   }
 }
 

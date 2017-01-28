@@ -9,11 +9,19 @@ export default class AppSidebar extends Component {
   constructor() {
     super();
 
-    // ファイルリストの取得
-    Drive.getFileList().then(
-      (res) => { this.props.onChangeShowFiles(res.files) },
-      (e) => { console.log(e); }
-    )
+    let cacheParentIds = localStorage.getItem('currentParentId');
+    let cacheParentNames = localStorage.getItem('currentParentName');
+    if(cacheParentIds) {
+      cacheParentIds = cacheParentIds.split(',');
+    } else {
+      cacheParentIds = ['root'];
+    }
+    if(cacheParentNames) {
+      cacheParentNames = cacheParentNames.split(',');
+    } else {
+      cacheParentNames = ['マイドライブ'];
+    }
+    this.getFileList(cacheParentNames, cacheParentIds);
   }
 
   render() {
@@ -22,6 +30,15 @@ export default class AppSidebar extends Component {
       menuContents.push(
         <FileList key='file-list'
           files={ this.props.showFiles }
+          selectFile={ this.props.selectFile }
+          openedFile={ this.props.openedFile }
+          currentDirIds={ this.props.currentDirIds }
+          currentDirNames={ this.props.currentDirNames }
+          onChangeShowFiles={ input => this.props.onChangeShowFiles(input) }
+          onChangeSelectFile={ input => this.props.onChangeSelectFile(input) }
+          onChangeOpenedFile={ input => this.props.onChangeOpenedFile(input) }
+          onChangeCurrentDir={ (name, id) => this.props.onChangeCurrentDir(name, id) }
+          getFileList={ (name, id) => this.getFileList(name, id) }
         />
       );
     } else {
@@ -37,10 +54,32 @@ export default class AppSidebar extends Component {
       </Sidebar>
     );
   }
+
+  getFileList(parentNames=[], parentIds=[]) {
+    Drive.getFileList(parentIds[parentIds.length-1]).then(
+      (res) => {
+        /* 非同期処理になったらsagaへもっていく部分 */
+        localStorage.setItem('currentParentId', parentIds.join(','));
+        localStorage.setItem('currentParentName', parentNames.join(','));
+        this.props.onChangeCurrentDir(parentNames, parentIds);
+        /**************************************/
+        this.props.onChangeShowFiles(res.files);
+      },
+      (e) => { console.log(e); }
+    )
+  }
 }
 
 AppSidebar.propTypes = {
   visible: PropTypes.bool,
   showFiles: PropTypes.array,
+  selectFile: PropTypes.string,
+  openedFile: PropTypes.string,
+  currentDirNames: PropTypes.array,
+  currentDirIds: PropTypes.array,
+
   onChangeShowFiles: PropTypes.func,
+  onChangeSelectFile: PropTypes.func,
+  onChangeOpenedFile: PropTypes.func,
+  onChangeCurrentDir: PropTypes.func,
 };
