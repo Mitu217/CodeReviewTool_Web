@@ -81521,10 +81521,9 @@ var Drive = function () {
     key: 'createFile',
     value: function createFile(name, diff) {
       var self = this;
-      console.log(name);
       var promise = new Promise(function (resolve, reject) {
         try {
-          realtimeUtils.createRealtimeFile('New Quickstart File', function (createResponse) {
+          realtimeUtils.createRealtimeFile(name, function (createResponse) {
             realtimeUtils.load(createResponse.id, function (doc) {
               resolve(createResponse.id);
             }, function (model) {

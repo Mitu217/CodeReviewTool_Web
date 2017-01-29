@@ -109,10 +109,9 @@ class Drive {
   /** create file for reatime editing **/
   createFile(name, diff) {
     const self = this;
-    console.log(name);
     let promise = new Promise((resolve, reject) => {
       try {
-        realtimeUtils.createRealtimeFile('New Quickstart File', (createResponse) => {
+        realtimeUtils.createRealtimeFile(name, (createResponse) => {
           realtimeUtils.load(
             createResponse.id,
             (doc) => {
