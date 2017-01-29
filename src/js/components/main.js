@@ -6,6 +6,7 @@ import Drive from '../lib/drive';
 import AppLoading from './appLoading';
 import Appbar from './appbar';
 import Contents from './contents';
+import NewFileModal from './newFileModal';
 
 export default class Main extends Component {
 
@@ -15,7 +16,10 @@ export default class Main extends Component {
     // TODO willmountの方が良い？
     // check authenticate
     Drive.checkOauth().then(
-      () => this.authSuccess(),
+      () => Drive.checkRealtimeOauth().then(
+        () => this.authSuccess(),
+        () => this.authFailure()
+      ),
       () => this.authFailure()
     );
   }
@@ -55,15 +59,30 @@ export default class Main extends Component {
             onChangeMenuShowFiles={ input => this.props.onChangeMenuShowFiles(input) }
             onChangeMenuSelectFile={ input => this.props.onChangeMenuSelectFile(input) }
             onChangeMenuCurrentDir={ (name, id) => this.props.onChangeMenuCurrentDir(name, id) }
+
+            editOpenedFile={ this.props.editOpenedFile }
+            onChangeEditOpenedFile={ input => this.props.onChangeEditOpenedFile(input) }
+
+            onChangeModalVisible={ input => this.props.onChangeModalVisible(input) }
           />
         );
+        contents.push(
+          <NewFileModal key='newFileModal'
+            visible={ this.props.modalVisible }
+            onChangeVisible={ input => this.props.onChangeModalVisible(input) }
+          />
+        )
         break;
 
       case 'failure': //認証失敗
         contents = '';
         break;
     }
-    return (<div>{contents}</div>);
+    return (
+      <div>
+        {contents}
+      </div>
+    );
   }
 
   toggleMenu() {
@@ -89,4 +108,7 @@ Main.propTypes = {
 
   editOpenedFile: PropTypes.string,
   onChangeEditOpenedFile: PropTypes.func,
+
+  modalVisible: PropTypes.bool,
+  onChangeModalVisible: PropTypes.func,
 };

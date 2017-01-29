@@ -41,6 +41,11 @@ export default class AppSidebar extends Component {
           getFileList={ (name, id) => this.getFileList(name, id) }
         />
       );
+      menuContents.push(
+        <div id='create-newfile' key='newfile'>
+          <Icon name='plus' size='big' onClick={ (e) => this.onSubmitNewFile(e) }/>
+        </div>
+      );
     } else {
       menuContents.push(
         <AppLoading key='load' />
@@ -68,6 +73,10 @@ export default class AppSidebar extends Component {
       (e) => { console.log(e); }
     )
   }
+
+  onSubmitNewFile(e) {
+    this.props.onChangeModalVisible(true);
+  }
 }
 
 AppSidebar.propTypes = {
@@ -82,4 +91,6 @@ AppSidebar.propTypes = {
   onChangeSelectFile: PropTypes.func,
   onChangeOpenedFile: PropTypes.func,
   onChangeCurrentDir: PropTypes.func,
+
+  onChangeModalVisible: PropTypes.func,
 };

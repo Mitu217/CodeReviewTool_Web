@@ -27,7 +27,7 @@ export default class FileList extends Component {
       switch (file.mimeType) {
         case 'application/vnd.google-apps.folder': //ディレクトリ
           list.push(
-            <Menu.Item name='inbox' active={ select === file.id } key={ file.id } data-id={ file.id } data-name={ file.name } onClick={ (e) => this.onSelectItem(e) } >
+            <Menu.Item name='inbox' active={ select === file.id } key={ file.id } data-id={ file.id } data-name={ file.name } data-type={ file.mimeType } onClick={ (e) => this.onSelectItem(e) } >
               <Image src={ file.iconLink } size='mini' />
               { file.name }
             </Menu.Item>
@@ -35,7 +35,7 @@ export default class FileList extends Component {
           break;
         case 'application/vnd.google-apps.drive-sdk.629393106275': //専用ファイル
           list.push(
-            <Menu.Item name='inbox' active={ select === file.id } key={ file.id } data-id={ file.id } data-name={ file.name } onClick={ (e) => this.onSelectItem(e) } >
+            <Menu.Item name='inbox' active={ select === file.id } key={ file.id } data-id={ file.id } data-name={ file.name } data-type={ file.mimeType } onClick={ (e) => this.onSelectItem(e) } >
               <Image src={ file.iconLink } size='mini' />
               { file.name }
             </Menu.Item>
@@ -55,13 +55,22 @@ export default class FileList extends Component {
   onSelectItem(e) {
     const id = e.target.getAttribute('data-id');
     const name = e.target.getAttribute('data-name');
+    const type = e.target.getAttribute('data-type');
     if (clicked) {
       //double click
-      let currentDirIds = [].concat(this.props.currentDirIds);
-      let currentDirNames = [].concat(this.props.currentDirNames);
-      currentDirIds.push(id);
-      currentDirNames.push(name);
-      this.props.getFileList(currentDirNames, currentDirIds);
+      switch (type) {
+        case 'application/vnd.google-apps.folder':
+          // immutableなオブジェクトを直接変更をかけることはできないのでShallowCopy
+          let currentDirIds = [].concat(this.props.currentDirIds);
+          let currentDirNames = [].concat(this.props.currentDirNames);
+          currentDirIds.push(id);
+          currentDirNames.push(name);
+          this.props.getFileList(currentDirNames, currentDirIds);
+          break;
+        case 'application/vnd.google-apps.drive-sdk.629393106275': //専用ファイル
+          this.props.onChangeOpenedFile(id);
+          break;
+      }
       clicked = false;
     } else {
       //single click

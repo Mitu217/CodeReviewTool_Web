@@ -1,10 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
 import AppSidebar from './appSidebar';
+import Edit from './edit';
 
 export default class Contents extends Component {
 
   render() {
+    const openedFile = this.props.editOpenedFile;
     return (
       <div id='contents'>
         <Sidebar.Pushable as={Segment}>
@@ -12,19 +14,19 @@ export default class Contents extends Component {
             visible={ this.props.menuVisible }
             showFiles={ this.props.menuShowFiles }
             selectFile={ this.props.menuSelectFile }
-            openedFile={ this.props.editOpenedFile }
             currentDirIds={ this.props.menuCurrentDirIds }
             currentDirNames={ this.props.menuCurrentDirNames }
+            openedFile={ this.props.editOpenedFile }
             onChangeShowFiles={ input => this.props.onChangeMenuShowFiles(input) }
             onChangeSelectFile={ input => this.props.onChangeMenuSelectFile(input) }
-            onChangeOpenedFile={ input => this.props.onChangeEditOpenedFile(input) }
             onChangeCurrentDir={ (name, id) => this.props.onChangeMenuCurrentDir(name, id) }
+            onChangeOpenedFile={ input => this.props.onChangeEditOpenedFile(input) }
+            onChangeModalVisible={ input => this.props.onChangeModalVisible(input) }
           />
           <Sidebar.Pusher>
-            <Segment basic>
-              <Header as='h3'>Application Content</Header>
-              <Image src='http://semantic-ui.com/images/wireframe/paragraph.png' />
-            </Segment>
+            <Edit
+              openedFile={ this.props.editOpenedFile }
+            />
           </Sidebar.Pusher>
         </Sidebar.Pushable>
       </div>
@@ -44,4 +46,6 @@ Contents.propTypes = {
 
   editOpenedFile: PropTypes.string,
   onChangeEditOpenedFile: PropTypes.func,
+
+  onChangeModalVisible: PropTypes.func,
 };

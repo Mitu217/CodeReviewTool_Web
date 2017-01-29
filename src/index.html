@@ -1,20 +1,4 @@
 <!--
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>CodeReviewTool</title>
-
-    <link rel="apple-touch-icon" sizes="120x120" href="images/apple-touch-icon.png">
-    <link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="images/favicon-16x16.png" sizes="16x16">
-    <link rel="manifest" href="images/manifest.json">
-    <meta name="theme-color" content="#ffffff">
-
-    <link href="https://www.gstatic.com/realtime/quickstart-styles.css" rel="stylesheet" type="text/css"/>
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
-
-  </head>
   <body>
     <main>
       <h1>Realtime Collaboration Quickstart</h1>
@@ -25,34 +9,6 @@
       <button id="auth_button">Authorize</button>
     </main>
     <script>
-      var clientId = '629393106275-jnod8al0nghvefhublb28kj8pd70to06.apps.googleusercontent.com';
-
-      if (!/^([0-9])$/.test(clientId[0])) {
-        alert('Invalid Client ID - did you forget to insert your application Client ID?');
-      }
-      // Create a new instance of the realtime utility with your client ID.
-      var realtimeUtils = new utils.RealtimeUtils({ clientId: clientId });
-
-      authorize();
-
-      function authorize() {
-        // Attempt to authorize
-        realtimeUtils.authorize(function(response){
-          if(response.error){
-            // Authorization failed because this is the first time the user has used your application,
-            // show the authorize button to prompt them to authorize manually.
-            var button = document.getElementById('auth_button');
-            button.classList.add('visible');
-            button.addEventListener('click', function () {
-              realtimeUtils.authorize(function(response){
-                start();
-              }, true);
-            });
-          } else {
-              start();
-          }
-        }, false);
-      }
 
       function start() {
         // With auth taken care of, load a file, or create one if there
@@ -101,7 +57,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Google Realtime Quickstart</title>
+    <title>CodeReviewTool</title>
 
     <link rel="apple-touch-icon" sizes="120x120" href="images/apple-touch-icon.png">
     <link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32">
@@ -109,9 +65,12 @@
     <link rel="manifest" href="images/manifest.json">
     <meta name="theme-color" content="#ffffff">
 
-    <link href="https://www.gstatic.com/realtime/quickstart-styles.css" rel="stylesheet" type="text/css"/>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.2/semantic.min.css"></link>
     <link rel="stylesheet" href="./css/style.css"></link>
+
+    <!-- Google Realtime Apis -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
 
     <!-- Google Apis -->
     <script src="https://apis.google.com/js/client.js"></script>
@@ -123,61 +82,3 @@
 
   </body>
 </html>
-
-<!--
-    <script>
-        var googleDriveClient;
-        var nextPageToken;
-        var parentId;
-        getGoogleAuth().then(loadGoogleDrive).then(function (gClient) {
-            googleDriveClient = gClient;
-            getFileList('', 'root').then(function (objFileList) {
-                viewFileList(objFileList);
-            });
-        });
-
-
-        // ファイルの一覧表示
-        function viewFileList(objFileList) {
-            var arrayFiles = objFileList.files;
-            console.log(arrayFiles);
-            nextPageToken = objFileList.nextPageToken ? objFileList.nextPageToken : '';
-            for (var i = 0; i < arrayFiles.length; i++) {
-                var file = arrayFiles[i];
-                var filename = $('<td/>').text(file.name);
-                var filesize = $('<td/>').text(file.size ? file.size : '-');
-                var viewLink = file.webViewLink ? $('<a/>').attr('href', file.webViewLink).text('表示') : '<span/>';
-                var fileview = $('<td/>').append(viewLink);
-                var dlLink = file.webContentLink ? $('<a/>').attr('href', file.webContentLink).text('DL') : '<span/>';
-                var filedownload = $('<td/>').append(dlLink);
-                var $row = $('<tr/>').append(filename).append(filesize).append(fileview).append(filedownload);
-                $row.attr('dblclick', "getDrilldownFile('" + file.mimeType + "','" + file.id + "')");
-                $('.file-list tbody').append($row);
-                console.log(file.mimeType);
-            }
-        }
-
-        // フォルダのドリルダウン
-        function getDrilldownFile(mime, id) {
-            if (mime === 'application/vnd.google-apps.folder') {
-                clearList();
-                parentId = id;
-                getFileList(null, id).then(function (objFileList) {
-                    viewFileList(objFileList);
-                });
-            }
-        }
-
-        function clearList() {
-            $('.file-list tbody *').remove();
-        }
-
-        // 追加取得
-        function nextPage() {
-            getFileList(nextPageToken, parentId).then(function (objFileList) {
-                viewFileList(objFileList);
-            });;
-        }
-    </script>
-</head>
--->

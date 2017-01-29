@@ -1,7 +1,6 @@
 import { clientId, scope } from './config';
 
-let oauthToken,client;
-
+let oauthToken,client, realtimeUtils;
 class Drive {
 
   // check authorized google
@@ -16,13 +15,27 @@ class Drive {
           'callback': () => {
             window.gapi.auth.authorize(authParams,(authResult) => {
               if (authResult && !authResult.error) {
-                  resolve();
+                resolve();
               } else {
-                  reject();
+                reject();
               }
             });
           }
         });
+    });
+    return promise;
+  }
+
+  checkRealtimeOauth() {
+    realtimeUtils = new window.utils.RealtimeUtils({ clientId: clientId });
+    let promise = new Promise((resolve, reject) => {
+      realtimeUtils.authorize(function(response){
+        if(response.error){
+          reject();
+        } else {
+          resolve();
+        }
+      }, false);
     });
     return promise;
   }
@@ -50,7 +63,7 @@ class Drive {
 
   // load google drive client
   loadGoogleDrive() {
-      var promise = new Promise(function (resolve, reject) {
+      let promise = new Promise(function (resolve, reject) {
           try {
               window.gapi.client.load('drive', 'v3', () => {
                 client = window.gapi.client;
@@ -69,7 +82,6 @@ class Drive {
 
   // get drive file list
   getFileList(strParentId) {
-    console.log(strParentId);
     var params = {
       orderBy: 'folder',
       q: 'trashed=false',
@@ -81,7 +93,7 @@ class Drive {
       // TODO localstorageに記録がないか取得する
       params.q += ' and "root" in parents';
     }
-    var promise = new Promise(function (resolve, reject) {
+    let promise = new Promise(function (resolve, reject) {
       try {
         var req = client.drive.files.list(params);
         req.execute((res) => {
@@ -92,6 +104,52 @@ class Drive {
       }
     });
     return promise;
+  }
+
+  /** create file for reatime editing **/
+  createRealtimeFile(id) {
+    const self = this;
+    realtimeUtils.createRealtimeFile('New Quickstart File', function(createResponse) {
+      //idとdiffデータを返す
+      realtimeUtils.load(createResponse.id, null, () => {
+        var string = model.createString();
+        string.setText('Welcome to the Quickstart App!');
+        model.getRoot().set('diffHtml', string);      //diff-html model
+        model.getRoot().set('comments', string);   //comment model
+        model.getRoot().set('editingUser', string);  //editing-user model
+        model.getRoot().set('connectUser', string);   //connection-user model
+      });
+    });
+  }
+
+  /** create file for reatime editing **/
+  loadRealtimeFile(id) {
+    let promise = new Promise(function (resolve, reject) {
+      try {
+        realtimeUtils.load(id, resolve, null);
+      } catch (e) {
+        reject(e);
+      }
+    });
+    return promise;
+  }
+  onFileInitialize(model) {
+    /*
+      var string = model.createString();
+      string.setText('Welcome to the Quickstart App!');
+      model.getRoot().set('demo_string', string);
+    */
+    console.log(model);
+  }
+  onFileLoaded(doc) {
+    var collaborativeString = doc.getModel().getRoot().get('demo_string');
+
+    var textArea1 = document.getElementById('text_area_1');
+    var textArea2 = document.getElementById('text_area_2');
+    window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1);
+    window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea2);
+
+    console.log(collaborativeString);
   }
 }
 

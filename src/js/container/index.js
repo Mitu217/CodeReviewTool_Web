@@ -22,6 +22,9 @@ const Container = props => (
 
       editOpenedFile={ props.editOpenedFile }
       onChangeEditOpenedFile={ input => props.changeEditOpenedFile(input) }
+
+      modalVisible={ props.modalVisible }
+      onChangeModalVisible={ input => props.changeModalVisible(input) }
     />
   </div>
 );
@@ -43,6 +46,9 @@ Container.propTypes = {
 
   editOpenedFile: PropTypes.string,
   changeEditOpenedFile: PropTypes.func,
+
+  modalVisible: PropTypes.bool,
+  changeModalVisible: PropTypes.func,
 };
 
 
@@ -56,6 +62,8 @@ const mapStateToProps = state => ({
   menuCurrentDirIds: state.menu.currentDirIds,
 
   editOpenedFile: state.edit.openedFile,
+
+  modalVisible: state.modal.visible,
 });
 
 
@@ -68,6 +76,8 @@ const mapDispatchToProps = dispatch => ({
   changeMenuCurrentDir: (names, ids) => dispatch(Actions.changeMenuCurrentDir(names, ids)),
 
   changeEditOpenedFile: input => dispatch(Actions.changeEditOpenedFile(input)),
+
+  changeModalVisible: input => dispatch(Actions.changeModalVisible(input)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Container);
