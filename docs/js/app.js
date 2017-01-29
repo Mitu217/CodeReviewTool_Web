@@ -80179,6 +80179,10 @@ var changeMenuCurrentDir = function changeMenuCurrentDir(names, ids) {
 var changeEditOpenedFile = function changeEditOpenedFile(input) {
   return { type: _types2.default.EDIT_OPENED_FILE_CHANGE, input: input };
 };
+// 表示するdiffのstateを更新
+var changeEditOutputDiff = function changeEditOutputDiff(input) {
+  return { type: _types2.default.EDIT_OUTPUT_DIFF_CHANGE, input: input };
+};
 
 // oauthTokenのstageを変更
 var changeOAuthState = function changeOAuthState(input) {
@@ -80203,6 +80207,7 @@ exports.default = {
 
   //editer
   changeEditOpenedFile: changeEditOpenedFile,
+  changeEditOutputDiff: changeEditOutputDiff,
 
   //Auth
   changeOAuthState: changeOAuthState,
@@ -80220,7 +80225,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _reduxsauce = require('reduxsauce');
 
-exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n\n  OAUTH_STATE_CHANGE\n\n  MENU_VISIBLE_CHANGE\n  MENU_SHOW_FILES_CHANGE\n  MENU_SELECT_FILE_CHANGE\n  MENU_CURRENT_DIR_CHANGE\n\n  MODAL_VISIBLE_CHANGE\n\n  EDIT_OPENED_FILE_CHANGE\n');
+exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n\n  OAUTH_STATE_CHANGE\n\n  MENU_VISIBLE_CHANGE\n  MENU_SHOW_FILES_CHANGE\n  MENU_SELECT_FILE_CHANGE\n  MENU_CURRENT_DIR_CHANGE\n\n  MODAL_VISIBLE_CHANGE\n\n  EDIT_OPENED_FILE_CHANGE\n  EDIT_OUTPUT_DIFF_CHANGE\n');
 
 },{"reduxsauce":992}],1197:[function(require,module,exports){
 'use strict';
@@ -80627,7 +80632,11 @@ var Contents = function (_Component) {
             _semanticUiReact.Sidebar.Pusher,
             null,
             _react2.default.createElement(_edit2.default, {
-              openedFile: this.props.editOpenedFile
+              openedFile: this.props.editOpenedFile,
+              outputDiff: this.props.editOutputDiff,
+              onChangeOutputDiff: function onChangeOutputDiff(input) {
+                return _this2.props.onChangeEditOutputDiff(input);
+              }
             })
           )
         )
@@ -80652,7 +80661,9 @@ Contents.propTypes = {
   onChangeMenuCurrentDir: _react.PropTypes.func,
 
   editOpenedFile: _react.PropTypes.string,
+  editOutputDiff: _react.PropTypes.string,
   onChangeEditOpenedFile: _react.PropTypes.func,
+  onChangeEditOutputDiff: _react.PropTypes.func,
 
   onChangeModalVisible: _react.PropTypes.func
 };
@@ -80696,16 +80707,14 @@ var Edit = function (_Component) {
   _createClass(Edit, [{
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
-      if (this.props.openedFile !== nextProps) {
+      var _this2 = this;
+
+      if (this.props.openedFile !== nextProps.openedFile) {
         if (nextProps.openedFile) {
           // 開くファイルが変更されたらされたら新規読み込み
           _drive2.default.loadRealtimeFile(nextProps.openedFile).then(function (doc) {
-            var collaborativeString = doc.getModel().getRoot().get('diff');
-
-            var textArea1 = document.getElementById('text_area_1');
-            window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1);
-
-            console.log(collaborativeString);
+            var diff = doc.getModel().getRoot().get('diff');
+            _this2.props.onChangeOutputDiff(diff);
           }, function () {});
         }
       }
@@ -80715,7 +80724,7 @@ var Edit = function (_Component) {
     value: function render() {
       var output = [];
       if (this.props.openedFile) {
-        output.push(_react2.default.createElement('textarea', { id: 'text_area_1' }));
+        output.push(_react2.default.createElement('div', { key: 'diff', dangerouslySetInnerHTML: { __html: this.props.outputDiff } }));
       }
 
       return _react2.default.createElement(
@@ -80733,7 +80742,9 @@ exports.default = Edit;
 
 
 Edit.propTypes = {
-  openedFile: _react.PropTypes.string
+  openedFile: _react.PropTypes.string,
+  outputDiff: _react.PropTypes.string,
+  onChangeOutputDiff: _react.PropTypes.func
 };
 
 },{"../lib/drive":1208,"diff2html":425,"react":966}],1203:[function(require,module,exports){
@@ -81007,8 +81018,12 @@ var Main = function (_Component) {
             },
 
             editOpenedFile: this.props.editOpenedFile,
+            editOutputDiff: this.props.editOutputDiff,
             onChangeEditOpenedFile: function onChangeEditOpenedFile(input) {
               return _this3.props.onChangeEditOpenedFile(input);
+            },
+            onChangeEditOutputDiff: function onChangeEditOutputDiff(input) {
+              return _this3.props.onChangeEditOutputDiff(input);
             },
 
             onChangeModalVisible: function onChangeModalVisible(input) {
@@ -81019,6 +81034,9 @@ var Main = function (_Component) {
             visible: this.props.modalVisible,
             onChangeVisible: function onChangeVisible(input) {
               return _this3.props.onChangeModalVisible(input);
+            },
+            onChangeOpenedFile: function onChangeOpenedFile(input) {
+              return _this3.props.onChangeEditOpenedFile(input);
             }
           }));
           break;
@@ -81063,7 +81081,9 @@ Main.propTypes = {
   onChangeMenuCurrentDir: _react.PropTypes.func,
 
   editOpenedFile: _react.PropTypes.string,
+  editOutputDiff: _react.PropTypes.string,
   onChangeEditOpenedFile: _react.PropTypes.func,
+  onChangeEditOutputDiff: _react.PropTypes.func,
 
   modalVisible: _react.PropTypes.bool,
   onChangeModalVisible: _react.PropTypes.func
@@ -81164,6 +81184,8 @@ var NewFileModal = function (_Component) {
   }, {
     key: 'createFile',
     value: function createFile() {
+      var _this3 = this;
+
       var form = document.forms.newfile;
       var fileName = form.fileName.value;
       var strDiff = form.diff.value;
@@ -81174,9 +81196,13 @@ var NewFileModal = function (_Component) {
         //outputFormat: 'line-by-line', //TODO オプションで変更できるように
         showFiles: true
       });
-      console.log(diff);
 
-      this.close();
+      _drive2.default.createFile(fileName, diff).then(function (id) {
+        _this3.props.onChangeOpenedFile(id);
+        _this3.close();
+      }, function (e) {
+        console.log(e);
+      });
     }
   }, {
     key: 'close',
@@ -81194,7 +81220,8 @@ exports.default = NewFileModal;
 
 NewFileModal.propTypes = {
   visible: _react.PropTypes.bool,
-  onChangeVisible: _react.PropTypes.func
+  onChangeVisible: _react.PropTypes.func,
+  onChangeOpenedFile: _react.PropTypes.func
 };
 
 },{"../lib/drive":1208,"diff2html":425,"react":966,"semantic-ui-react":1094}],1206:[function(require,module,exports){
@@ -81252,6 +81279,10 @@ var Container = function Container(props) {
       onChangeEditOpenedFile: function onChangeEditOpenedFile(input) {
         return props.changeEditOpenedFile(input);
       },
+      editOutputDiff: props.editOutputDiff,
+      onChangeEditOutputDiff: function onChangeEditOutputDiff(input) {
+        return props.changeEditOutputDiff(input);
+      },
 
       modalVisible: props.modalVisible,
       onChangeModalVisible: function onChangeModalVisible(input) {
@@ -81276,7 +81307,9 @@ Container.propTypes = {
   changeMenuCurrentDir: _react.PropTypes.func,
 
   editOpenedFile: _react.PropTypes.string,
+  outputDiff: _react.PropTypes.string,
   changeEditOpenedFile: _react.PropTypes.func,
+  changeEditOutputDiff: _react.PropTypes.func,
 
   modalVisible: _react.PropTypes.bool,
   changeModalVisible: _react.PropTypes.func
@@ -81293,6 +81326,7 @@ var mapStateToProps = function mapStateToProps(state) {
     menuCurrentDirIds: state.menu.currentDirIds,
 
     editOpenedFile: state.edit.openedFile,
+    editOutputDiff: state.edit.outputDiff,
 
     modalVisible: state.modal.visible
   };
@@ -81319,6 +81353,9 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
 
     changeEditOpenedFile: function changeEditOpenedFile(input) {
       return dispatch(_actions2.default.changeEditOpenedFile(input));
+    },
+    changeEditOutputDiff: function changeEditOutputDiff(input) {
+      return dispatch(_actions2.default.changeEditOutputDiff(input));
     },
 
     changeModalVisible: function changeModalVisible(input) {
@@ -81481,20 +81518,27 @@ var Drive = function () {
     /** create file for reatime editing **/
 
   }, {
-    key: 'createRealtimeFile',
-    value: function createRealtimeFile(id) {
+    key: 'createFile',
+    value: function createFile(name, diff) {
       var self = this;
-      realtimeUtils.createRealtimeFile('New Quickstart File', function (createResponse) {
-        //idとdiffデータを返す
-        realtimeUtils.load(createResponse.id, null, function () {
-          var string = model.createString();
-          string.setText('Welcome to the Quickstart App!');
-          model.getRoot().set('diffHtml', string); //diff-html model
-          model.getRoot().set('comments', string); //comment model
-          model.getRoot().set('editingUser', string); //editing-user model
-          model.getRoot().set('connectUser', string); //connection-user model
-        });
+      console.log(name);
+      var promise = new Promise(function (resolve, reject) {
+        try {
+          realtimeUtils.createRealtimeFile('New Quickstart File', function (createResponse) {
+            realtimeUtils.load(createResponse.id, function (doc) {
+              resolve(createResponse.id);
+            }, function (model) {
+              model.getRoot().set('diff', diff); //diff-html model
+              model.getRoot().set('comments', ''); //comment model
+              model.getRoot().set('editingUser', ''); //editing-user model
+              model.getRoot().set('connectUser', ''); //connection-user model
+            });
+          });
+        } catch (e) {
+          reject(e);
+        }
       });
+      return promise;
     }
 
     /** create file for reatime editing **/
@@ -81510,28 +81554,6 @@ var Drive = function () {
         }
       });
       return promise;
-    }
-  }, {
-    key: 'onFileInitialize',
-    value: function onFileInitialize(model) {
-      /*
-        var string = model.createString();
-        string.setText('Welcome to the Quickstart App!');
-        model.getRoot().set('demo_string', string);
-      */
-      console.log(model);
-    }
-  }, {
-    key: 'onFileLoaded',
-    value: function onFileLoaded(doc) {
-      var collaborativeString = doc.getModel().getRoot().get('demo_string');
-
-      var textArea1 = document.getElementById('text_area_1');
-      var textArea2 = document.getElementById('text_area_2');
-      window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1);
-      window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea2);
-
-      console.log(collaborativeString);
     }
   }]);
 
@@ -81585,6 +81607,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.INITIAL_STATE = undefined;
 
+var _ACTION_HANDLERS;
+
 var _reduxsauce = require('reduxsauce');
 
 var _seamlessImmutable = require('seamless-immutable');
@@ -81600,7 +81624,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var INITIAL_STATE = exports.INITIAL_STATE = (0, _seamlessImmutable2.default)({
-  openedFile: ''
+  openedFile: '',
+  outputDiff: ''
 });
 
 var changeOpenedFile = function changeOpenedFile(state, action) {
@@ -81609,7 +81634,13 @@ var changeOpenedFile = function changeOpenedFile(state, action) {
   });
 };
 
-var ACTION_HANDLERS = _defineProperty({}, _types2.default.EDIT_OPENED_FILE_CHANGE, changeOpenedFile);
+var changeOutputDiff = function changeOutputDiff(state, action) {
+  return state.merge({
+    outputDiff: action.input
+  });
+};
+
+var ACTION_HANDLERS = (_ACTION_HANDLERS = {}, _defineProperty(_ACTION_HANDLERS, _types2.default.EDIT_OPENED_FILE_CHANGE, changeOpenedFile), _defineProperty(_ACTION_HANDLERS, _types2.default.EDIT_OUTPUT_DIFF_CHANGE, changeOutputDiff), _ACTION_HANDLERS);
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 

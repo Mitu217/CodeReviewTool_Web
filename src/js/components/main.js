@@ -61,7 +61,9 @@ export default class Main extends Component {
             onChangeMenuCurrentDir={ (name, id) => this.props.onChangeMenuCurrentDir(name, id) }
 
             editOpenedFile={ this.props.editOpenedFile }
+            editOutputDiff={ this.props.editOutputDiff }
             onChangeEditOpenedFile={ input => this.props.onChangeEditOpenedFile(input) }
+            onChangeEditOutputDiff={ input => this.props.onChangeEditOutputDiff(input) }
 
             onChangeModalVisible={ input => this.props.onChangeModalVisible(input) }
           />
@@ -70,6 +72,7 @@ export default class Main extends Component {
           <NewFileModal key='newFileModal'
             visible={ this.props.modalVisible }
             onChangeVisible={ input => this.props.onChangeModalVisible(input) }
+            onChangeOpenedFile={ input => this.props.onChangeEditOpenedFile(input) }
           />
         )
         break;
@@ -107,7 +110,9 @@ Main.propTypes = {
   onChangeMenuCurrentDir: PropTypes.func,
 
   editOpenedFile: PropTypes.string,
+  editOutputDiff: PropTypes.string,
   onChangeEditOpenedFile: PropTypes.func,
+  onChangeEditOutputDiff: PropTypes.func,
 
   modalVisible: PropTypes.bool,
   onChangeModalVisible: PropTypes.func,

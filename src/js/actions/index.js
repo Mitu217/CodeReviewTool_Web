@@ -14,13 +14,14 @@ const changeMenuCurrentDir = (names, ids) => ({ type: Types.MENU_CURRENT_DIR_CHA
 
 // 開いているファイルの変更
 const changeEditOpenedFile = input => ({ type: Types.EDIT_OPENED_FILE_CHANGE, input });
+// 表示するdiffのstateを更新
+const changeEditOutputDiff = input => ({ type: Types.EDIT_OUTPUT_DIFF_CHANGE, input });
 
 // oauthTokenのstageを変更
 const changeOAuthState = input => ({ type: Types.OAUTH_STATE_CHANGE, input});
 
 // modal/visibleのstateを変更
 const changeModalVisible = input => ({ type: Types.MODAL_VISIBLE_CHANGE, input });
-
 
 /*** enabled Actoins ***/
 export default {
@@ -35,6 +36,7 @@ export default {
 
   //editer
   changeEditOpenedFile,
+  changeEditOutputDiff,
 
   //Auth
   changeOAuthState,

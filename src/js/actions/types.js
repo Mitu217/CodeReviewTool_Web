@@ -13,4 +13,5 @@ export default createTypes(`
   MODAL_VISIBLE_CHANGE
 
   EDIT_OPENED_FILE_CHANGE
+  EDIT_OUTPUT_DIFF_CHANGE
 `);

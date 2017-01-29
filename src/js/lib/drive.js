@@ -107,19 +107,30 @@ class Drive {
   }
 
   /** create file for reatime editing **/
-  createRealtimeFile(id) {
+  createFile(name, diff) {
     const self = this;
-    realtimeUtils.createRealtimeFile('New Quickstart File', function(createResponse) {
-      //idとdiffデータを返す
-      realtimeUtils.load(createResponse.id, null, () => {
-        var string = model.createString();
-        string.setText('Welcome to the Quickstart App!');
-        model.getRoot().set('diffHtml', string);      //diff-html model
-        model.getRoot().set('comments', string);   //comment model
-        model.getRoot().set('editingUser', string);  //editing-user model
-        model.getRoot().set('connectUser', string);   //connection-user model
-      });
+    console.log(name);
+    let promise = new Promise((resolve, reject) => {
+      try {
+        realtimeUtils.createRealtimeFile('New Quickstart File', (createResponse) => {
+          realtimeUtils.load(
+            createResponse.id,
+            (doc) => {
+              resolve(createResponse.id);
+            },
+            (model) => {
+              model.getRoot().set('diff', diff);      //diff-html model
+              model.getRoot().set('comments', '');   //comment model
+              model.getRoot().set('editingUser', '');  //editing-user model
+              model.getRoot().set('connectUser', '');   //connection-user model
+            }
+          );
+        });
+      } catch (e) {
+        reject(e);
+      }
     });
+    return promise;
   }
 
   /** create file for reatime editing **/
@@ -132,24 +143,6 @@ class Drive {
       }
     });
     return promise;
-  }
-  onFileInitialize(model) {
-    /*
-      var string = model.createString();
-      string.setText('Welcome to the Quickstart App!');
-      model.getRoot().set('demo_string', string);
-    */
-    console.log(model);
-  }
-  onFileLoaded(doc) {
-    var collaborativeString = doc.getModel().getRoot().get('demo_string');
-
-    var textArea1 = document.getElementById('text_area_1');
-    var textArea2 = document.getElementById('text_area_2');
-    window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1);
-    window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea2);
-
-    console.log(collaborativeString);
   }
 }
 

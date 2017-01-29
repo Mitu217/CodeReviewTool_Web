@@ -37,14 +37,21 @@ export default class NewFileModal extends Component {
     const strDiff = form.diff.value;
 
     const diff = Diff2Html.getPrettyHtml(strDiff, {
-        inputFormat: 'diff',
-        outputFormat: 'side-by-side', //TODO オプションで変更できるように
-        //outputFormat: 'line-by-line', //TODO オプションで変更できるように
-        showFiles: true,
-      });
-    console.log(diff);
+      inputFormat: 'diff',
+      outputFormat: 'side-by-side', //TODO オプションで変更できるように
+      //outputFormat: 'line-by-line', //TODO オプションで変更できるように
+      showFiles: true,
+    });
 
-    this.close();
+    Drive.createFile(fileName, diff).then(
+      (id) => {
+        this.props.onChangeOpenedFile(id);
+        this.close();
+      },
+      (e) => {
+        console.log(e);
+      }
+    );
   }
 
   close() {
@@ -56,4 +63,5 @@ export default class NewFileModal extends Component {
 NewFileModal.propTypes = {
   visible: PropTypes.bool,
   onChangeVisible: PropTypes.func,
+  onChangeOpenedFile: PropTypes.func,
 };

@@ -5,17 +5,13 @@ import Drive from '../lib/drive';
 export default class Edit extends Component {
 
   componentWillReceiveProps(nextProps) {
-    if(this.props.openedFile !== nextProps) {
+    if(this.props.openedFile !== nextProps.openedFile) {
       if(nextProps.openedFile) {
         // 開くファイルが変更されたらされたら新規読み込み
         Drive.loadRealtimeFile(nextProps.openedFile).then(
           (doc) => {
-            var collaborativeString = doc.getModel().getRoot().get('diff');
-
-            var textArea1 = document.getElementById('text_area_1');
-            window.gapi.drive.realtime.databinding.bindString(collaborativeString, textArea1);
-
-            console.log(collaborativeString);
+            let diff = doc.getModel().getRoot().get('diff');
+            this.props.onChangeOutputDiff(diff);
           },
           () => {}
         );
@@ -27,7 +23,8 @@ export default class Edit extends Component {
     let output = [];
     if(this.props.openedFile) {
       output.push(
-        <textarea id="text_area_1"></textarea>
+        <div key='diff' dangerouslySetInnerHTML={{__html: this.props.outputDiff}}>
+        </div>
       );
     }
 
@@ -42,4 +39,6 @@ export default class Edit extends Component {
 
 Edit.propTypes = {
   openedFile: PropTypes.string,
+  outputDiff: PropTypes.string,
+  onChangeOutputDiff: PropTypes.func,
 };
