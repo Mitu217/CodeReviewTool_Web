@@ -224,7 +224,7 @@ class Diff2HtmlUI {
     */
   }
 
-  addComment(target, config) {
+  editComment(target, config, postCallback, cancelCallback) {
     if(!target){
       return;
     }
@@ -232,6 +232,15 @@ class Diff2HtmlUI {
 
     // side-by-sideかline-by-lineかの判定
     if( cfg.outputFormat === 'side-by-side') {
+      let tr = target.closest('tr');
+      let rowIndex = tr.rowIndex;
+
+      let tbody = $(target.closest('tbody'));
+      let textArea = $(tbody.children()[rowIndex+1]).find('.d2h-comment-side-linenumber');
+      if(textArea.length) { //block duplicated
+        return;
+      }
+
       //delかins,cntxかで判定できる疑惑ある
       let fileDiff = $(target.closest('.d2h-files-diff'));
       let sideDiff = $(target.closest('.d2h-file-side-diff'));
@@ -239,16 +248,24 @@ class Diff2HtmlUI {
       let anotherDiff = targetDiffIndex == 0 ? fileDiff.children()[1] : fileDiff.children()[0];
 
       // add comment form
-      let tr = target.closest('tr');
       $(tr).after('<tr><td class="d2h-comment-side-linenumber"></td><td><div class="d2h-side-edit-comment"><div class="ui clearing segment"><form class="ui form"><textarea name="comment" rows="4"></textarea></form><button class="ui green right floated button">Reply</button><button class="ui black right floated button">Cancel</button></div></div></td></tr>');
+      let postBtn = $(tbody.children()[rowIndex+1]).find('.green');
+      let cancelBtn = $(tbody.children()[rowIndex+1]).find('.black');
+      postBtn.click((e) => { postCallback('テストコメント'); });
+      cancelBtn.click((e) => { cancelCallback || cancelCallback(); });
+
       // add dummy form heigit
-      let rowIndex = tr.rowIndex;
       let anotherTbody = $(anotherDiff).find('.d2h-diff-tbody');
       $(anotherTbody.children()[rowIndex]).after('<tr><td class="d2h-comment-side-linenumber"></td><td><div class="d2h-side-edit-dummy"></div></td></tr>');
     } else {
 
     }
   }
+
+  cancelComment(target) {
+
+  }
+
 }
 
 const diff2htmlUI = new Diff2HtmlUI();

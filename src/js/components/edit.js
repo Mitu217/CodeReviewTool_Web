@@ -74,8 +74,15 @@ export default class Edit extends Component {
       Diff2HtmlUI.fileListCloseable('#edit', true);
       Diff2HtmlUI.addCommentBtnEvent((target) => {
         //TODO  編集状態の登録 - 編集中の状態をrelatimeデータに追加（どのファイルのどの行かぐらいしかとれないかな？
-        Diff2HtmlUI.addComment(target, {
+        Diff2HtmlUI.editComment(target, {
           outputFormat: 'side-by-side'
+        },
+        (comment) => {
+          console.log(comment);
+          Diff2HtmlUI.cancelComment(target);
+        },
+        () => {
+          Diff2HtmlUI.cancelComment(target);
         });
       })
       Diff2HtmlUI.synchronisedScroll('#edit', true);

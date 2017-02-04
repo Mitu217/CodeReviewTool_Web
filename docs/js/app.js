@@ -80876,8 +80876,13 @@ var Edit = function (_Component) {
         _diff2htmlUi2.default.fileListCloseable('#edit', true);
         _diff2htmlUi2.default.addCommentBtnEvent(function (target) {
           //TODO  編集状態の登録 - 編集中の状態をrelatimeデータに追加（どのファイルのどの行かぐらいしかとれないかな？
-          _diff2htmlUi2.default.addComment(target, {
+          _diff2htmlUi2.default.editComment(target, {
             outputFormat: 'side-by-side'
+          }, function (comment) {
+            console.log(comment);
+            _diff2htmlUi2.default.cancelComment(target);
+          }, function () {
+            _diff2htmlUi2.default.cancelComment(target);
           });
         });
         _diff2htmlUi2.default.synchronisedScroll('#edit', true);
@@ -81831,8 +81836,8 @@ var Diff2HtmlUI = function () {
       */
     }
   }, {
-    key: 'addComment',
-    value: function addComment(target, config) {
+    key: 'editComment',
+    value: function editComment(target, config, postCallback, cancelCallback) {
       if (!target) {
         return;
       }
@@ -81840,6 +81845,17 @@ var Diff2HtmlUI = function () {
 
       // side-by-sideかline-by-lineかの判定
       if (cfg.outputFormat === 'side-by-side') {
+        var tr = target.closest('tr');
+        var rowIndex = tr.rowIndex;
+
+        var tbody = $(target.closest('tbody'));
+        var textArea = $(tbody.children()[rowIndex + 1]).find('.d2h-comment-side-linenumber');
+        console.log(textArea);
+        if (textArea.length) {
+          //block duplicated
+          return;
+        }
+
         //delかins,cntxかで判定できる疑惑ある
         var fileDiff = $(target.closest('.d2h-files-diff'));
         var sideDiff = $(target.closest('.d2h-file-side-diff'));
@@ -81847,14 +81863,24 @@ var Diff2HtmlUI = function () {
         var anotherDiff = targetDiffIndex == 0 ? fileDiff.children()[1] : fileDiff.children()[0];
 
         // add comment form
-        var tr = target.closest('tr');
         $(tr).after('<tr><td class="d2h-comment-side-linenumber"></td><td><div class="d2h-side-edit-comment"><div class="ui clearing segment"><form class="ui form"><textarea name="comment" rows="4"></textarea></form><button class="ui green right floated button">Reply</button><button class="ui black right floated button">Cancel</button></div></div></td></tr>');
+        var postBtn = $(tbody.children()[rowIndex + 1]).find('.green');
+        var cancelBtn = $(tbody.children()[rowIndex + 1]).find('.black');
+        postBtn.click(function (e) {
+          postCallback('テストコメント');
+        });
+        cancelBtn.click(function (e) {
+          cancelCallback || cancelCallback();
+        });
+
         // add dummy form heigit
-        var rowIndex = tr.rowIndex;
         var anotherTbody = $(anotherDiff).find('.d2h-diff-tbody');
         $(anotherTbody.children()[rowIndex]).after('<tr><td class="d2h-comment-side-linenumber"></td><td><div class="d2h-side-edit-dummy"></div></td></tr>');
       } else {}
     }
+  }, {
+    key: 'cancelComment',
+    value: function cancelComment(target) {}
   }]);
 
   return Diff2HtmlUI;
