@@ -21,9 +21,11 @@ const Container = props => (
       onChangeMenuCurrentDir={ (names, ids) => props.changeMenuCurrentDir(names, ids) }
 
       editOpenedFile={ props.editOpenedFile }
-      onChangeEditOpenedFile={ input => props.changeEditOpenedFile(input) }
       editOutputDiff={ props.editOutputDiff }
+      editOutputComments={ props.editOutputComments }
+      onChangeEditOpenedFile={ input => props.changeEditOpenedFile(input) }
       onChangeEditOutputDiff={ input => props.changeEditOutputDiff(input) }
+      onChangeEditOutputComments={ input => props.changeEditOutputComments(input) }
 
       modalVisible={ props.modalVisible }
       onChangeModalVisible={ input => props.changeModalVisible(input) }
@@ -47,9 +49,11 @@ Container.propTypes = {
   changeMenuCurrentDir:  PropTypes.func,
 
   editOpenedFile: PropTypes.string,
-  outputDiff: PropTypes.string,
+  editOutputDiff: PropTypes.string,
+  editOutputComments: PropTypes.string,
   changeEditOpenedFile: PropTypes.func,
   changeEditOutputDiff: PropTypes.func,
+  changeEditOutputComments: PropTypes.func,
 
   modalVisible: PropTypes.bool,
   changeModalVisible: PropTypes.func,
@@ -67,7 +71,7 @@ const mapStateToProps = state => ({
 
   editOpenedFile: state.edit.openedFile,
   editOutputDiff: state.edit.outputDiff,
-
+  editOutputComments: state.edit.outputComments,
   modalVisible: state.modal.visible,
 });
 
@@ -82,6 +86,7 @@ const mapDispatchToProps = dispatch => ({
 
   changeEditOpenedFile: input => dispatch(Actions.changeEditOpenedFile(input)),
   changeEditOutputDiff: input => dispatch(Actions.changeEditOutputDiff(input)),
+  changeEditOutputComments: input => dispatch(Actions.changeEditOutputComments(input)),
 
   changeModalVisible: input => dispatch(Actions.changeModalVisible(input)),
 });

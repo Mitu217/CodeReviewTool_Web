@@ -16,6 +16,8 @@ const changeMenuCurrentDir = (names, ids) => ({ type: Types.MENU_CURRENT_DIR_CHA
 const changeEditOpenedFile = input => ({ type: Types.EDIT_OPENED_FILE_CHANGE, input });
 // 表示するdiffのstateを更新
 const changeEditOutputDiff = input => ({ type: Types.EDIT_OUTPUT_DIFF_CHANGE, input });
+// 表示するcommentsのstateを更新
+const changeEditOutputComments = input => ({ type: Types.EDIT_OUTPUT_COMMENTS_CHANGE, input });
 
 // oauthTokenのstageを変更
 const changeOAuthState = input => ({ type: Types.OAUTH_STATE_CHANGE, input});
@@ -37,6 +39,7 @@ export default {
   //editer
   changeEditOpenedFile,
   changeEditOutputDiff,
+  changeEditOutputComments,
 
   //Auth
   changeOAuthState,

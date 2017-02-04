@@ -62,8 +62,10 @@ export default class Main extends Component {
 
             editOpenedFile={ this.props.editOpenedFile }
             editOutputDiff={ this.props.editOutputDiff }
+            editOutputComments={ this.props.editOutputComments }
             onChangeEditOpenedFile={ input => this.props.onChangeEditOpenedFile(input) }
             onChangeEditOutputDiff={ input => this.props.onChangeEditOutputDiff(input) }
+            onChangeEditOutputComments={ input => this.props.onChangeEditOutputComments(input) }
 
             onChangeModalVisible={ input => this.props.onChangeModalVisible(input) }
           />
@@ -111,8 +113,10 @@ Main.propTypes = {
 
   editOpenedFile: PropTypes.string,
   editOutputDiff: PropTypes.string,
+  editOutputComments: PropTypes.string,
   onChangeEditOpenedFile: PropTypes.func,
   onChangeEditOutputDiff: PropTypes.func,
+  onChangeEditOutputComments: PropTypes.func,
 
   modalVisible: PropTypes.bool,
   onChangeModalVisible: PropTypes.func,

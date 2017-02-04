@@ -111,19 +111,25 @@ class Drive {
     const self = this;
     let promise = new Promise((resolve, reject) => {
       try {
-        realtimeUtils.createRealtimeFile(name, (createResponse) => {
-          realtimeUtils.load(
-            createResponse.id,
-            (doc) => {
-              resolve(createResponse.id);
-            },
-            (model) => {
-              model.getRoot().set('diff', diff);      //diff-html model
-              model.getRoot().set('comments', '');   //comment model
-              model.getRoot().set('editingUser', '');  //editing-user model
-              model.getRoot().set('connectUser', '');   //connection-user model
-            }
-          );
+        window.gapi.client.load('drive', 'v2', function() {
+          var insertHash = {
+            mimeType: 'application/vnd.google-apps.drive-sdk.629393106275',
+            name: name
+          };
+          window.gapi.client.drive.files.insert(insertHash).execute((createResponse) => {
+            realtimeUtils.load(
+              createResponse.id,
+              (doc) => {
+                resolve(createResponse.id);
+              },
+              (model) => {
+                model.getRoot().set('diff', diff);      //diff-html model
+                model.getRoot().set('comments', '');   //comment model
+                model.getRoot().set('editingUser', '');  //editing-user model
+                model.getRoot().set('connectUser', '');   //connection-user model
+              }
+            );
+          });
         });
       } catch (e) {
         reject(e);

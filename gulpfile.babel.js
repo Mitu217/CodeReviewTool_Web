@@ -58,7 +58,7 @@ gulp.task('build:html', (done) => {
 });
 
 gulp.task('build:scripts', (done) => {
-  browserify({ entries: `${srcDir}/js/app.js`, extensions: ['js'] })
+  browserify({entries: `${srcDir}/js/app.js`,extensions: ['js']})
     .transform(babelify)
     .bundle()
     .on('error', (err) => {

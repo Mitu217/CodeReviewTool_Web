@@ -27,7 +27,9 @@ export default class Contents extends Component {
             <Edit
               openedFile={ this.props.editOpenedFile }
               outputDiff={ this.props.editOutputDiff }
+              outputComments={ this.props.editOutputComments }
               onChangeOutputDiff={ input => this.props.onChangeEditOutputDiff(input) }
+              onChangeOutputComments={ input => this.props.onChangeEditOutputComments(input) }
             />
           </Sidebar.Pusher>
         </Sidebar.Pushable>
@@ -48,8 +50,10 @@ Contents.propTypes = {
 
   editOpenedFile: PropTypes.string,
   editOutputDiff: PropTypes.string,
+  editOutputComments: PropTypes.string,
   onChangeEditOpenedFile: PropTypes.func,
   onChangeEditOutputDiff: PropTypes.func,
+  onChangeEditOutputComments: PropTypes.func,
 
   onChangeModalVisible: PropTypes.func,
 };

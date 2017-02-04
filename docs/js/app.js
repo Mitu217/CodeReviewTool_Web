@@ -53363,6 +53363,9 @@ module.exports = require('./lib/React');
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 exports.printBuffer = printBuffer;
 
 var _helpers = require('./helpers');
@@ -53374,8 +53377,6 @@ var _diff2 = _interopRequireDefault(_diff);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 /**
  * Get log level string based on supplied params
@@ -53399,40 +53400,40 @@ function getLogLevel(level, action, payload, type) {
 }
 
 function defaultTitleFormatter(options) {
-  var timestamp = options.timestamp;
-  var duration = options.duration;
+  var timestamp = options.timestamp,
+      duration = options.duration;
+
 
   return function (action, time, took) {
     var parts = ['action'];
-    if (timestamp) {
-      parts.push('@ ' + time);
-    }
-    parts.push(action.type);
-    if (duration) {
-      parts.push('(in ' + took.toFixed(2) + ' ms)');
-    }
+
+    if (timestamp) parts.push('@ ' + time);
+    parts.push(String(action.type));
+    if (duration) parts.push('(in ' + took.toFixed(2) + ' ms)');
+
     return parts.join(' ');
   };
 }
 
 function printBuffer(buffer, options) {
-  var logger = options.logger;
-  var actionTransformer = options.actionTransformer;
-  var _options$titleFormatt = options.titleFormatter;
-  var titleFormatter = _options$titleFormatt === undefined ? defaultTitleFormatter(options) : _options$titleFormatt;
-  var collapsed = options.collapsed;
-  var colors = options.colors;
-  var level = options.level;
-  var diff = options.diff;
+  var logger = options.logger,
+      actionTransformer = options.actionTransformer,
+      _options$titleFormatt = options.titleFormatter,
+      titleFormatter = _options$titleFormatt === undefined ? defaultTitleFormatter(options) : _options$titleFormatt,
+      collapsed = options.collapsed,
+      colors = options.colors,
+      level = options.level,
+      diff = options.diff;
+
 
   buffer.forEach(function (logEntry, key) {
-    var started = logEntry.started;
-    var startedTime = logEntry.startedTime;
-    var action = logEntry.action;
-    var prevState = logEntry.prevState;
-    var error = logEntry.error;
-    var took = logEntry.took;
-    var nextState = logEntry.nextState;
+    var started = logEntry.started,
+        startedTime = logEntry.startedTime,
+        action = logEntry.action,
+        prevState = logEntry.prevState,
+        error = logEntry.error;
+    var took = logEntry.took,
+        nextState = logEntry.nextState;
 
     var nextEntry = buffer[key + 1];
 
@@ -53445,7 +53446,7 @@ function printBuffer(buffer, options) {
     var formattedAction = actionTransformer(action);
     var isCollapsed = typeof collapsed === 'function' ? collapsed(function () {
       return nextState;
-    }, action) : collapsed;
+    }, action, logEntry) : collapsed;
 
     var formattedTime = (0, _helpers.formatTime)(startedTime);
     var titleCSS = colors.title ? 'color: ' + colors.title(formattedAction) + ';' : null;
@@ -53490,7 +53491,7 @@ function printBuffer(buffer, options) {
     try {
       logger.groupEnd();
     } catch (e) {
-      logger.log('—— log end ——');
+      logger.log('\u2014\u2014 log end \u2014\u2014');
     }
   });
 }
@@ -53540,7 +53541,7 @@ exports.default = {
   // Deprecated options
   transformer: undefined
 };
-module.exports = exports['default'];
+module.exports = exports["default"];
 },{}],969:[function(require,module,exports){
 'use strict';
 
@@ -53554,6 +53555,8 @@ var _deepDiff = require('deep-diff');
 var _deepDiff2 = _interopRequireDefault(_deepDiff);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 // https://github.com/flitbit/diff#differences
 var dictionary = {
@@ -53580,24 +53583,25 @@ function style(kind) {
 }
 
 function render(diff) {
-  var kind = diff.kind;
-  var path = diff.path;
-  var lhs = diff.lhs;
-  var rhs = diff.rhs;
-  var index = diff.index;
-  var item = diff.item;
+  var kind = diff.kind,
+      path = diff.path,
+      lhs = diff.lhs,
+      rhs = diff.rhs,
+      index = diff.index,
+      item = diff.item;
+
 
   switch (kind) {
     case 'E':
-      return path.join('.') + ' ' + lhs + ' → ' + rhs;
+      return [path.join('.'), lhs, '\u2192', rhs];
     case 'N':
-      return path.join('.') + ' ' + rhs;
+      return [path.join('.'), rhs];
     case 'D':
-      return '' + path.join('.');
+      return [path.join('.')];
     case 'A':
       return [path.join('.') + '[' + index + ']', item];
     default:
-      return null;
+      return [];
   }
 }
 
@@ -53620,16 +53624,16 @@ function diffLogger(prevState, newState, logger, isCollapsed) {
 
       var output = render(elem);
 
-      logger.log('%c ' + dictionary[kind].text, style(kind), output);
+      logger.log.apply(logger, ['%c ' + dictionary[kind].text, style(kind)].concat(_toConsumableArray(output)));
     });
   } else {
-    logger.log('—— no diff ——');
+    logger.log('\u2014\u2014 no diff \u2014\u2014');
   }
 
   try {
     logger.groupEnd();
   } catch (e) {
-    logger.log('—— diff end —— ');
+    logger.log('\u2014\u2014 diff end \u2014\u2014 ');
   }
 }
 module.exports = exports['default'];
@@ -53656,11 +53660,11 @@ var timer = exports.timer = typeof performance !== "undefined" && performance !=
 },{}],971:[function(require,module,exports){
 'use strict';
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _core = require('./core');
 
@@ -53692,17 +53696,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @returns {function} logger middleware
  */
 function createLogger() {
-  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
   var loggerOptions = _extends({}, _defaults2.default, options);
 
-  var logger = loggerOptions.logger;
-  var transformer = loggerOptions.transformer;
-  var stateTransformer = loggerOptions.stateTransformer;
-  var errorTransformer = loggerOptions.errorTransformer;
-  var predicate = loggerOptions.predicate;
-  var logErrors = loggerOptions.logErrors;
-  var diffPredicate = loggerOptions.diffPredicate;
+  var logger = loggerOptions.logger,
+      transformer = loggerOptions.transformer,
+      stateTransformer = loggerOptions.stateTransformer,
+      errorTransformer = loggerOptions.errorTransformer,
+      predicate = loggerOptions.predicate,
+      logErrors = loggerOptions.logErrors,
+      diffPredicate = loggerOptions.diffPredicate;
 
   // Return if 'console' object is not defined
 
@@ -53739,7 +53743,7 @@ function createLogger() {
         logEntry.prevState = stateTransformer(getState());
         logEntry.action = action;
 
-        var returnedValue = undefined;
+        var returnedValue = void 0;
         if (logErrors) {
           try {
             returnedValue = next(action);
@@ -58393,8 +58397,6 @@ var _invoke3 = _interopRequireDefault(_invoke2);
 
 var _react = require('react');
 
-var _react2 = _interopRequireDefault(_react);
-
 var _reactDom = require('react-dom');
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
@@ -58434,14 +58436,18 @@ var Portal = function (_Component) {
           closeOnDocumentClick = _this$props.closeOnDocumentClick,
           closeOnRootNodeClick = _this$props.closeOnRootNodeClick;
 
-      // If not mounted, no portal, or event happened in the portal, ignore it
 
-      if (!_this.node || !_this.portal || _this.portal.contains(e.target)) return;
+      if (!_this.rootNode // not mounted
+      || !_this.portalNode // no portal
+      || (0, _invoke3.default)(_this, 'triggerNode.contains', e.target) // event happened in trigger (delegate to trigger handlers)
+      || (0, _invoke3.default)(_this, 'portalNode.contains', e.target) // event happened in the portal
+      ) return; // ignore the click
 
-      if (closeOnDocumentClick || closeOnRootNodeClick && _this.node.contains(e.target)) {
+      var didClickInRootNode = _this.rootNode.contains(e.target);
+
+      if (closeOnDocumentClick && !didClickInRootNode || closeOnRootNodeClick && didClickInRootNode) {
         debug('handleDocumentClick()');
 
-        e.stopPropagation();
         _this.close(e);
       }
     }, _this.handleEscape = function (e) {
@@ -58450,7 +58456,6 @@ var Portal = function (_Component) {
 
       debug('handleEscape()');
 
-      e.preventDefault();
       _this.close(e);
     }, _this.handlePortalMouseLeave = function (e) {
       var _this$props2 = _this.props,
@@ -58481,7 +58486,10 @@ var Portal = function (_Component) {
 
       (0, _invoke3.default)(trigger, 'props.onBlur', e);
 
-      if (!closeOnTriggerBlur) return;
+      // do not close if focus is given to the portal
+      var didFocusPortal = (0, _invoke3.default)(_this, 'rootNode.contains', e.relatedTarget);
+
+      if (!closeOnTriggerBlur || didFocusPortal) return;
 
       debug('handleTriggerBlur()');
       _this.close(e);
@@ -58499,19 +58507,12 @@ var Portal = function (_Component) {
       if (open && closeOnTriggerClick) {
         debug('handleTriggerClick() - close');
 
-        e.stopPropagation();
         _this.close(e);
       } else if (!open && openOnTriggerClick) {
         debug('handleTriggerClick() - open');
 
-        e.stopPropagation();
         _this.open(e);
       }
-
-      // Prevents handleDocumentClick from closing the portal when
-      // openOnTriggerFocus is set. Focus shifts on mousedown so the portal opens
-      // before the click finishes so it may actually wind up on the document.
-      e.nativeEvent.stopImmediatePropagation();
     }, _this.handleTriggerFocus = function (e) {
       var _this$props5 = _this.props,
           trigger = _this$props5.trigger,
@@ -58566,6 +58567,7 @@ var Portal = function (_Component) {
 
       _this.trySetState({ open: true });
     }, _this.openWithTimeout = function (e, delay) {
+      debug('openWithTimeout()', delay);
       // React wipes the entire event object and suggests using e.persist() if
       // you need the event for async access. However, even with e.persist
       // certain required props (e.g. currentTarget) are null so we're forced to clone.
@@ -58582,6 +58584,7 @@ var Portal = function (_Component) {
 
       _this.trySetState({ open: false });
     }, _this.closeWithTimeout = function (e, delay) {
+      debug('closeWithTimeout()', delay);
       // React wipes the entire event object and suggests using e.persist() if
       // you need the event for async access. However, even with e.persist
       // certain required props (e.g. currentTarget) are null so we're forced to clone.
@@ -58590,21 +58593,22 @@ var Portal = function (_Component) {
         return _this.close(eventClone);
       }, delay || 0);
     }, _this.mountPortal = function () {
-      if (!_lib.isBrowser || _this.node) return;
+      if (!_lib.isBrowser || _this.rootNode) return;
 
       debug('mountPortal()');
 
       var _this$props8 = _this.props,
-          mountNode = _this$props8.mountNode,
+          _this$props8$mountNod = _this$props8.mountNode,
+          mountNode = _this$props8$mountNod === undefined ? _lib.isBrowser ? document.body : null : _this$props8$mountNod,
           prepend = _this$props8.prepend;
 
 
-      _this.node = document.createElement('div');
+      _this.rootNode = document.createElement('div');
 
       if (prepend) {
-        mountNode.insertBefore(_this.node, mountNode.firstElementChild);
+        mountNode.insertBefore(_this.rootNode, mountNode.firstElementChild);
       } else {
-        mountNode.appendChild(_this.node);
+        mountNode.appendChild(_this.rootNode);
       }
 
       document.addEventListener('click', _this.handleDocumentClick);
@@ -58614,19 +58618,19 @@ var Portal = function (_Component) {
 
       if (onMount) onMount(null, _this.props);
     }, _this.unmountPortal = function () {
-      if (!_lib.isBrowser || !_this.node) return;
+      if (!_lib.isBrowser || !_this.rootNode) return;
+      _this.didInitialRender = false;
 
       debug('unmountPortal()');
 
-      _reactDom2.default.unmountComponentAtNode(_this.node);
-      _this.node.parentNode.removeChild(_this.node);
-      if (_this.previousActiveElement) _this.previousActiveElement.focus();
+      _reactDom2.default.unmountComponentAtNode(_this.rootNode);
+      _this.rootNode.parentNode.removeChild(_this.rootNode);
 
-      _this.portal.removeEventListener('mouseleave', _this.handlePortalMouseLeave);
-      _this.portal.removeEventListener('mouseenter', _this.handlePortalMouseEnter);
+      _this.portalNode.removeEventListener('mouseleave', _this.handlePortalMouseLeave);
+      _this.portalNode.removeEventListener('mouseenter', _this.handlePortalMouseEnter);
 
-      _this.node = null;
-      _this.portal = null;
+      _this.rootNode = null;
+      _this.portalNode = null;
 
       document.removeEventListener('click', _this.handleDocumentClick);
       document.removeEventListener('keydown', _this.handleEscape);
@@ -58634,17 +58638,21 @@ var Portal = function (_Component) {
       var onUnmount = _this.props.onUnmount;
 
       if (onUnmount) onUnmount(null, _this.props);
+    }, _this.handleRef = function (c) {
+      _this.triggerNode = _reactDom2.default.findDOMNode(c);
     }, _temp), (0, _possibleConstructorReturn3.default)(_this, _ret);
   }
 
   (0, _createClass3.default)(Portal, [{
     key: 'componentDidMount',
     value: function componentDidMount() {
+      debug('componentDidMount()');
       this.renderPortal();
     }
   }, {
     key: 'componentDidUpdate',
     value: function componentDidUpdate(prevProps, prevState) {
+      debug('componentDidUpdate()');
       // NOTE: Ideally the portal rendering would happen in the render() function
       // but React gives a warning about not being pure and suggests doing it
       // within this method.
@@ -58690,7 +58698,8 @@ var Portal = function (_Component) {
       var _props = this.props,
           children = _props.children,
           className = _props.className,
-          closeOnTriggerBlur = _props.closeOnTriggerBlur;
+          closeOnTriggerBlur = _props.closeOnTriggerBlur,
+          openOnTriggerFocus = _props.openOnTriggerFocus;
 
 
       this.mountPortal();
@@ -58698,30 +58707,36 @@ var Portal = function (_Component) {
       // Server side rendering
       if (!_lib.isBrowser) return null;
 
-      this.node.className = className || '';
+      this.rootNode.className = className || '';
 
       // when re-rendering, first remove listeners before re-adding them to the new node
-      if (this.portal) {
-        this.portal.removeEventListener('mouseleave', this.handlePortalMouseLeave);
-        this.portal.removeEventListener('mouseenter', this.handlePortalMouseEnter);
+      if (this.portalNode) {
+        this.portalNode.removeEventListener('mouseleave', this.handlePortalMouseLeave);
+        this.portalNode.removeEventListener('mouseenter', this.handlePortalMouseEnter);
       }
 
-      _reactDom2.default.unstable_renderSubtreeIntoContainer(this, _react.Children.only(children), this.node);
+      _reactDom2.default.unstable_renderSubtreeIntoContainer(this, _react.Children.only(children), this.rootNode);
 
-      this.portal = this.node.firstElementChild;
-      // don't take focus away from portals that close on blur
-      if (!closeOnTriggerBlur) {
-        this.previousActiveElement = document.activeElement;
-        this.portal.setAttribute('tabindex', '-1');
-        this.portal.style.outline = 'none';
-        // wait a tick for things like popups which need to calculate where the popup shows up
+      this.portalNode = this.rootNode.firstElementChild;
+
+      // don't take focus away from for focus based portal triggers
+      if (!this.didInitialRender && !(openOnTriggerFocus || closeOnTriggerBlur)) {
+        this.didInitialRender = true;
+
+        // add a tabIndex so we can focus it, remove outline
+        this.portalNode.tabIndex = -1;
+        this.portalNode.style.outline = 'none';
+
+        // Wait a tick for things like popups which need to calculate where the popup shows up.
+        // Otherwise, the element is focused at its initial position, scrolling the browser, then
+        // it is immediately repositioned at the proper location.
         setTimeout(function () {
-          return _this2.portal && _this2.portal.focus();
+          if (_this2.portalNode) _this2.portalNode.focus();
         });
       }
 
-      this.portal.addEventListener('mouseleave', this.handlePortalMouseLeave);
-      this.portal.addEventListener('mouseenter', this.handlePortalMouseEnter);
+      this.portalNode.addEventListener('mouseleave', this.handlePortalMouseLeave);
+      this.portalNode.addEventListener('mouseenter', this.handlePortalMouseEnter);
     }
   }, {
     key: 'render',
@@ -58731,7 +58746,8 @@ var Portal = function (_Component) {
 
       if (!trigger) return null;
 
-      return _react2.default.cloneElement(trigger, {
+      return (0, _react.cloneElement)(trigger, {
+        ref: this.handleRef,
         onBlur: this.handleTriggerBlur,
         onClick: this.handleTriggerClick,
         onFocus: this.handleTriggerFocus,
@@ -58746,8 +58762,7 @@ var Portal = function (_Component) {
 Portal.defaultProps = {
   closeOnDocumentClick: true,
   closeOnEscape: true,
-  openOnTriggerClick: true,
-  mountNode: _lib.isBrowser ? document.body : null
+  openOnTriggerClick: true
 };
 Portal.autoControlledProps = ['open'];
 Portal._meta = _meta;
@@ -58764,10 +58779,10 @@ process.env.NODE_ENV !== "production" ? Portal.propTypes = {
    * - DocumentClick - any click not within the portal
    * - RootNodeClick - a click not within the portal but within the portal's wrapper
    */
-  closeOnRootNodeClick: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['closeOnDocumentClick']), _react.PropTypes.bool]),
+  closeOnRootNodeClick: _react.PropTypes.bool,
 
-  /** Controls whether or not the portal should close on a click outside. */
-  closeOnDocumentClick: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['closeOnRootNodeClick']), _react.PropTypes.bool]),
+  /** Controls whether or not the portal should close when the document is clicked. */
+  closeOnDocumentClick: _react.PropTypes.bool,
 
   /** Controls whether or not the portal should close when escape is pressed is displayed. */
   closeOnEscape: _react.PropTypes.bool,
@@ -59233,10 +59248,11 @@ function Breadcrumb(props) {
       className = props.className,
       divider = props.divider,
       icon = props.icon,
-      size = props.size,
-      sections = props.sections;
+      sections = props.sections,
+      size = props.size;
 
-  var classes = (0, _classnames2.default)('ui', className, size, 'breadcrumb');
+
+  var classes = (0, _classnames2.default)('ui', size, 'breadcrumb', className);
   var rest = (0, _lib.getUnhandledProps)(Breadcrumb, props);
   var ElementType = (0, _lib.getElementType)(Breadcrumb, props);
 
@@ -59286,10 +59302,7 @@ function Breadcrumb(props) {
 Breadcrumb.handledProps = ['as', 'children', 'className', 'divider', 'icon', 'sections', 'size'];
 Breadcrumb._meta = {
   name: 'Breadcrumb',
-  type: _lib.META.TYPES.COLLECTION,
-  props: {
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'medium')
-  }
+  type: _lib.META.TYPES.COLLECTION
 };
 
 process.env.NODE_ENV !== "production" ? Breadcrumb.propTypes = {
@@ -59312,8 +59325,8 @@ process.env.NODE_ENV !== "production" ? Breadcrumb.propTypes = {
   /** Shorthand array of props for Breadcrumb.Section. */
   sections: _lib.customPropTypes.collectionShorthand,
 
-  /** Size of Breadcrumb */
-  size: _react.PropTypes.oneOf(Breadcrumb._meta.props.size)
+  /** Size of Breadcrumb. */
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'medium'))
 } : void 0;
 
 Breadcrumb.Divider = _BreadcrumbDivider2.default;
@@ -59358,23 +59371,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  */
 function BreadcrumbDivider(props) {
   var children = props.children,
+      className = props.className,
       content = props.content,
-      icon = props.icon,
-      className = props.className;
+      icon = props.icon;
 
-  var classes = (0, _classnames2.default)(className, 'divider');
+
+  var classes = (0, _classnames2.default)('divider', className);
   var rest = (0, _lib.getUnhandledProps)(BreadcrumbDivider, props);
   var ElementType = (0, _lib.getElementType)(BreadcrumbDivider, props);
 
   var iconElement = _Icon2.default.create(icon, (0, _extends3.default)({}, rest, { className: classes }));
   if (iconElement) return iconElement;
 
-  var breadcrumbContent = void 0;
-  if ((0, _isNil3.default)(content)) {
-    breadcrumbContent = (0, _isNil3.default)(children) ? '/' : children;
-  } else {
-    breadcrumbContent = content;
-  }
+  var breadcrumbContent = content;
+  if ((0, _isNil3.default)(content)) breadcrumbContent = (0, _isNil3.default)(children) ? '/' : children;
+
   return _react2.default.createElement(
     ElementType,
     (0, _extends3.default)({}, rest, { className: classes }),
@@ -59457,7 +59468,7 @@ var _lib = require('../../lib');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * A section sub-component for Breadcrumb component
+ * A section sub-component for Breadcrumb component.
  */
 var BreadcrumbSection = function (_Component) {
   (0, _inherits3.default)(BreadcrumbSection, _Component);
@@ -59532,11 +59543,11 @@ process.env.NODE_ENV !== "production" ? BreadcrumbSection.propTypes = {
   /** Shorthand for primary content. */
   content: _lib.customPropTypes.contentShorthand,
 
-  /** Render as an `a` tag instead of a `div`. */
-  link: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['href']), _react.PropTypes.bool]),
-
   /** Render as an `a` tag instead of a `div` and adds the href attribute. */
   href: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['link']), _react.PropTypes.string]),
+
+  /** Render as an `a` tag instead of a `div`. */
+  link: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['href']), _react.PropTypes.bool]),
 
   /**
    * Called on click. When passed, the component will render as an `a`
@@ -59850,6 +59861,7 @@ var Form = function (_Component) {
           children = _props.children,
           className = _props.className,
           error = _props.error,
+          inverted = _props.inverted,
           loading = _props.loading,
           reply = _props.reply,
           size = _props.size,
@@ -59858,7 +59870,7 @@ var Form = function (_Component) {
           widths = _props.widths;
 
 
-      var classes = (0, _classnames2.default)('ui', size, (0, _lib.useKeyOnly)(error, 'error'), (0, _lib.useKeyOnly)(loading, 'loading'), (0, _lib.useKeyOnly)(reply, 'reply'), (0, _lib.useKeyOnly)(success, 'success'), (0, _lib.useKeyOnly)(warning, 'warning'), (0, _lib.useWidthProp)(widths, null, true), 'form', className);
+      var classes = (0, _classnames2.default)('ui', size, (0, _lib.useKeyOnly)(error, 'error'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(loading, 'loading'), (0, _lib.useKeyOnly)(reply, 'reply'), (0, _lib.useKeyOnly)(success, 'success'), (0, _lib.useKeyOnly)(warning, 'warning'), (0, _lib.useWidthProp)(widths, null, true), 'form', className);
       var rest = (0, _lib.getUnhandledProps)(Form, this.props);
       var ElementType = (0, _lib.getElementType)(Form, this.props);
 
@@ -59900,6 +59912,9 @@ process.env.NODE_ENV !== "production" ? Form.propTypes = {
   /** Automatically show any error Message children */
   error: _react.PropTypes.bool,
 
+  /** A form can have its color inverted for contrast */
+  inverted: _react.PropTypes.bool,
+
   /** Automatically show a loading indicator */
   loading: _react.PropTypes.bool,
 
@@ -59929,7 +59944,7 @@ process.env.NODE_ENV !== "production" ? Form.propTypes = {
   /** Forms can automatically divide fields to be equal width */
   widths: _react.PropTypes.oneOf(_meta.props.widths)
 } : void 0;
-Form.handledProps = ['as', 'children', 'className', 'error', 'loading', 'onSubmit', 'reply', 'serializer', 'size', 'success', 'warning', 'widths'];
+Form.handledProps = ['as', 'children', 'className', 'error', 'inverted', 'loading', 'onSubmit', 'reply', 'serializer', 'size', 'success', 'warning', 'widths'];
 }).call(this,require('_process'))
 },{"../../lib":1105,"./FormButton":1010,"./FormCheckbox":1011,"./FormDropdown":1012,"./FormField":1013,"./FormGroup":1014,"./FormInput":1015,"./FormRadio":1016,"./FormSelect":1017,"./FormTextArea":1018,"_process":797,"babel-runtime/helpers/classCallCheck":11,"babel-runtime/helpers/createClass":12,"babel-runtime/helpers/defineProperty":13,"babel-runtime/helpers/extends":14,"babel-runtime/helpers/inherits":16,"babel-runtime/helpers/possibleConstructorReturn":18,"classnames":22,"lodash/each":695,"lodash/filter":699,"lodash/find":700,"lodash/map":761,"lodash/without":791,"react":966}],1010:[function(require,module,exports){
 (function (process){
@@ -60700,10 +60715,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function Grid(props) {
   var celled = props.celled,
       centered = props.centered,
-      container = props.container,
       children = props.children,
       className = props.className,
       columns = props.columns,
+      container = props.container,
       divided = props.divided,
       doubling = props.doubling,
       padded = props.padded,
@@ -60732,17 +60747,7 @@ Grid.Row = _GridRow2.default;
 
 Grid._meta = {
   name: 'Grid',
-  type: _lib.META.TYPES.COLLECTION,
-  props: {
-    celled: ['internally'],
-    columns: [].concat((0, _toConsumableArray3.default)(_lib.SUI.WIDTHS), ['equal']),
-    divided: ['vertically'],
-    padded: ['horizontally', 'vertically'],
-    relaxed: ['very'],
-    reversed: ['computer', 'computer vertically', 'mobile', 'mobile vertically', 'tablet', 'tablet vertically'],
-    textAlign: _lib.SUI.TEXT_ALIGNMENTS,
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS
-  }
+  type: _lib.META.TYPES.COLLECTION
 };
 
 process.env.NODE_ENV !== "production" ? Grid.propTypes = {
@@ -60750,13 +60755,10 @@ process.env.NODE_ENV !== "production" ? Grid.propTypes = {
   as: _lib.customPropTypes.as,
 
   /** A grid can have rows divided into cells. */
-  celled: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Grid._meta.props.celled)]),
+  celled: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['internally'])]),
 
   /** A grid can have its columns centered. */
   centered: _react.PropTypes.bool,
-
-  /** A grid can be combined with a container to use avaiable layout and alignment */
-  container: _react.PropTypes.bool,
 
   /** Primary content. */
   children: _react.PropTypes.node,
@@ -60765,22 +60767,25 @@ process.env.NODE_ENV !== "production" ? Grid.propTypes = {
   className: _react.PropTypes.string,
 
   /** Represents column count per row in Grid. */
-  columns: _react.PropTypes.oneOf(Grid._meta.props.columns),
+  columns: _react.PropTypes.oneOf([].concat((0, _toConsumableArray3.default)(_lib.SUI.WIDTHS), ['equal'])),
+
+  /** A grid can be combined with a container to use avaiable layout and alignment. */
+  container: _react.PropTypes.bool,
 
   /** A grid can have dividers between its columns. */
-  divided: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Grid._meta.props.divided)]),
+  divided: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['vertically'])]),
 
   /** A grid can double its column width on tablet and mobile sizes. */
   doubling: _react.PropTypes.bool,
 
   /** A grid can preserve its vertical and horizontal gutters on first and last columns. */
-  padded: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Grid._meta.props.padded)]),
+  padded: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['horizontally', 'vertically'])]),
 
   /** A grid can increase its gutters to allow for more negative space. */
-  relaxed: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Grid._meta.props.relaxed)]),
+  relaxed: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['very'])]),
 
   /** A grid can specify that its columns should reverse order at different device sizes. */
-  reversed: _react.PropTypes.oneOf(Grid._meta.props.reversed),
+  reversed: _react.PropTypes.oneOf(['computer', 'computer vertically', 'mobile', 'mobile vertically', 'tablet', 'tablet vertically']),
 
   /** A grid can have its columns stack on-top of each other after reaching mobile breakpoints. */
   stackable: _react.PropTypes.bool,
@@ -60789,10 +60794,10 @@ process.env.NODE_ENV !== "production" ? Grid.propTypes = {
   stretched: _react.PropTypes.bool,
 
   /** A grid can specify its text alignment. */
-  textAlign: _react.PropTypes.oneOf(Grid._meta.props.textAlign),
+  textAlign: _react.PropTypes.oneOf(_lib.SUI.TEXT_ALIGNMENTS),
 
   /** A grid can specify its vertical alignment to have all its columns vertically centered. */
-  verticalAlign: _react.PropTypes.oneOf(_GridColumn2.default._meta.props.verticalAlign)
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS)
 } : void 0;
 
 exports.default = Grid;
@@ -60856,20 +60861,7 @@ GridColumn.handledProps = ['as', 'children', 'className', 'color', 'computer', '
 GridColumn._meta = {
   name: 'GridColumn',
   parent: 'Grid',
-  type: _lib.META.TYPES.COLLECTION,
-  props: {
-    color: _lib.SUI.COLORS,
-    computer: _lib.SUI.WIDTHS,
-    floated: _lib.SUI.FLOATS,
-    largeScreen: _lib.SUI.WIDTHS,
-    mobile: _lib.SUI.WIDTHS,
-    only: ['computer', 'large screen', 'mobile', 'tablet mobile', 'tablet', 'widescreen'],
-    tablet: _lib.SUI.WIDTHS,
-    textAlign: _lib.SUI.TEXT_ALIGNMENTS,
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS,
-    widescreen: _lib.SUI.WIDTHS,
-    width: _lib.SUI.WIDTHS
-  }
+  type: _lib.META.TYPES.COLLECTION
 };
 
 process.env.NODE_ENV !== "production" ? GridColumn.propTypes = {
@@ -60882,41 +60874,41 @@ process.env.NODE_ENV !== "production" ? GridColumn.propTypes = {
   /** Additional classes. */
   className: _react.PropTypes.string,
 
-  /** A column can specify a width for a computer. */
-  computer: _react.PropTypes.oneOf(GridColumn._meta.props.width),
-
   /** A grid column can be colored. */
-  color: _react.PropTypes.oneOf(GridColumn._meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
+
+  /** A column can specify a width for a computer. */
+  computer: _react.PropTypes.oneOf(_lib.SUI.WIDTHS),
 
   /** A column can sit flush against the left or right edge of a row. */
-  floated: _react.PropTypes.oneOf(GridColumn._meta.props.floated),
+  floated: _react.PropTypes.oneOf(_lib.SUI.FLOATS),
 
   /** A column can specify a width for a large screen device. */
-  largeScreen: _react.PropTypes.oneOf(GridColumn._meta.props.width),
+  largeScreen: _react.PropTypes.oneOf(_lib.SUI.WIDTHS),
 
   /** A column can specify a width for a mobile device. */
-  mobile: _react.PropTypes.oneOf(GridColumn._meta.props.width),
+  mobile: _react.PropTypes.oneOf(_lib.SUI.WIDTHS),
 
   /** A column can appear only for a specific device, or screen sizes. */
-  only: _react.PropTypes.oneOf(GridColumn._meta.props.only),
+  only: _react.PropTypes.oneOf(['computer', 'large screen', 'mobile', 'tablet mobile', 'tablet', 'widescreen']),
 
   /** An can stretch its contents to take up the entire grid or row height. */
   stretched: _react.PropTypes.bool,
 
   /** A column can specify a width for a tablet device. */
-  tablet: _react.PropTypes.oneOf(GridColumn._meta.props.width),
+  tablet: _react.PropTypes.oneOf(_lib.SUI.WIDTHS),
 
   /** A row can specify its text alignment. */
-  textAlign: _react.PropTypes.oneOf(GridColumn._meta.props.textAlign),
+  textAlign: _react.PropTypes.oneOf(_lib.SUI.TEXT_ALIGNMENTS),
 
   /** A column can specify its vertical alignment to have all its columns vertically centered. */
-  verticalAlign: _react.PropTypes.oneOf(GridColumn._meta.props.verticalAlign),
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS),
 
   /** A column can specify a width for a wide screen device. */
-  widescreen: _react.PropTypes.oneOf(GridColumn._meta.props.width),
+  widescreen: _react.PropTypes.oneOf(_lib.SUI.WIDTHS),
 
   /** Represents width of column. */
-  width: _react.PropTypes.oneOf(GridColumn._meta.props.width)
+  width: _react.PropTypes.oneOf(_lib.SUI.WIDTHS)
 } : void 0;
 
 exports.default = GridColumn;
@@ -60981,15 +60973,7 @@ GridRow.handledProps = ['as', 'centered', 'children', 'className', 'color', 'col
 GridRow._meta = {
   name: 'GridRow',
   parent: 'Grid',
-  type: _lib.META.TYPES.COLLECTION,
-  props: {
-    color: _lib.SUI.COLORS,
-    columns: [].concat((0, _toConsumableArray3.default)(_lib.SUI.WIDTHS), ['equal']),
-    only: ['computer', 'large screen', 'mobile', 'tablet mobile', 'tablet', 'widescreen'],
-    reversed: ['computer', 'computer vertically', 'mobile', 'mobile vertically', 'tablet', 'tablet vertically'],
-    textAlign: _lib.SUI.TEXT_ALIGNMENTS,
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS
-  }
+  type: _lib.META.TYPES.COLLECTION
 };
 
 process.env.NODE_ENV !== "production" ? GridRow.propTypes = {
@@ -61006,28 +60990,28 @@ process.env.NODE_ENV !== "production" ? GridRow.propTypes = {
   className: _react.PropTypes.string,
 
   /** A grid row can be colored. */
-  color: _react.PropTypes.oneOf(GridRow._meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** Represents column count per line in Row. */
-  columns: _react.PropTypes.oneOf(GridRow._meta.props.columns),
+  columns: _react.PropTypes.oneOf([].concat((0, _toConsumableArray3.default)(_lib.SUI.WIDTHS), ['equal'])),
 
   /** A row can have dividers between its columns. */
   divided: _react.PropTypes.bool,
 
   /** A row can appear only for a specific device, or screen sizes. */
-  only: _react.PropTypes.oneOf(GridRow._meta.props.only),
+  only: _react.PropTypes.oneOf(['computer', 'large screen', 'mobile', 'tablet mobile', 'tablet', 'widescreen']),
 
   /** A  row can specify that its columns should reverse order at different device sizes. */
-  reversed: _react.PropTypes.oneOf(GridRow._meta.props.reversed),
+  reversed: _react.PropTypes.oneOf(['computer', 'computer vertically', 'mobile', 'mobile vertically', 'tablet', 'tablet vertically']),
 
   /** An can stretch its contents to take up the entire column height. */
   stretched: _react.PropTypes.bool,
 
   /** A row can specify its text alignment. */
-  textAlign: _react.PropTypes.oneOf(GridRow._meta.props.textAlign),
+  textAlign: _react.PropTypes.oneOf(_lib.SUI.TEXT_ALIGNMENTS),
 
   /** A row can specify its vertical alignment to have all its columns vertically centered. */
-  verticalAlign: _react.PropTypes.oneOf(GridRow._meta.props.verticalAlign)
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS)
 } : void 0;
 
 exports.default = GridRow;
@@ -61115,25 +61099,10 @@ var _MenuMenu2 = _interopRequireDefault(_MenuMenu);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _meta = {
-  name: 'Menu',
-  type: _lib.META.TYPES.COLLECTION,
-  props: {
-    attached: ['top', 'bottom'],
-    color: _lib.SUI.COLORS,
-    floated: ['right'],
-    icon: ['labeled'],
-    fixed: ['left', 'right', 'bottom', 'top'],
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'medium', 'big'),
-    tabular: ['right'],
-    widths: _lib.SUI.WIDTHS
-  }
-};
-
 /**
  * A menu displays grouped navigation actions.
+ * @see Dropdown
  */
-
 var Menu = function (_Component) {
   (0, _inherits3.default)(Menu, _Component);
 
@@ -61150,13 +61119,12 @@ var Menu = function (_Component) {
 
     return _ret = (_temp = (_this = (0, _possibleConstructorReturn3.default)(this, (_ref = Menu.__proto__ || Object.getPrototypeOf(Menu)).call.apply(_ref, [this].concat(args))), _this), _this.handleItemClick = function (e, itemProps) {
       var index = itemProps.index;
-
-
-      _this.trySetState({ activeIndex: index });
       var _this$props = _this.props,
           items = _this$props.items,
           onItemClick = _this$props.onItemClick;
 
+
+      _this.trySetState({ activeIndex: index });
 
       if ((0, _get3.default)(items[index], 'onClick')) items[index].onClick(e, itemProps);
       if (onItemClick) onItemClick(e, itemProps);
@@ -61198,14 +61166,14 @@ var Menu = function (_Component) {
           pagination = _props.pagination,
           pointing = _props.pointing,
           secondary = _props.secondary,
+          size = _props.size,
           stackable = _props.stackable,
           tabular = _props.tabular,
           text = _props.text,
           vertical = _props.vertical,
-          size = _props.size,
           widths = _props.widths;
 
-      var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useWidthProp)(widths, 'item'), (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), (0, _lib.useKeyOnly)(borderless, 'borderless'), (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useValueAndKey)(fixed, 'fixed'), (0, _lib.useKeyOrValueAndKey)(floated, 'floated'), (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOrValueAndKey)(icon, 'icon'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(pagination, 'pagination'), (0, _lib.useKeyOnly)(pointing, 'pointing'), (0, _lib.useKeyOnly)(secondary, 'secondary'), (0, _lib.useKeyOnly)(stackable, 'stackable'), (0, _lib.useKeyOrValueAndKey)(tabular, 'tabular'), (0, _lib.useKeyOnly)(text, 'text'), (0, _lib.useKeyOnly)(vertical, 'vertical'), className, 'menu');
+      var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useKeyOnly)(borderless, 'borderless'), (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(pagination, 'pagination'), (0, _lib.useKeyOnly)(pointing, 'pointing'), (0, _lib.useKeyOnly)(secondary, 'secondary'), (0, _lib.useKeyOnly)(stackable, 'stackable'), (0, _lib.useKeyOnly)(text, 'text'), (0, _lib.useKeyOnly)(vertical, 'vertical'), (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), (0, _lib.useKeyOrValueAndKey)(floated, 'floated'), (0, _lib.useKeyOrValueAndKey)(icon, 'icon'), (0, _lib.useKeyOrValueAndKey)(tabular, 'tabular'), (0, _lib.useValueAndKey)(fixed, 'fixed'), (0, _lib.useWidthProp)(widths, 'item'), className, 'menu');
       var rest = (0, _lib.getUnhandledProps)(Menu, this.props);
       var ElementType = (0, _lib.getElementType)(Menu, this.props);
 
@@ -61219,7 +61187,10 @@ var Menu = function (_Component) {
   return Menu;
 }(_lib.AutoControlledComponent);
 
-Menu._meta = _meta;
+Menu._meta = {
+  name: 'Menu',
+  type: _lib.META.TYPES.COLLECTION
+};
 Menu.autoControlledProps = ['activeIndex'];
 Menu.Header = _MenuHeader2.default;
 Menu.Item = _MenuItem2.default;
@@ -61232,7 +61203,7 @@ process.env.NODE_ENV !== "production" ? Menu.propTypes = {
   activeIndex: _react.PropTypes.number,
 
   /** A menu may be attached to other content segments. */
-  attached: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.attached)]),
+  attached: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['top', 'bottom'])]),
 
   /** A menu item or menu can have no borders. */
   borderless: _react.PropTypes.bool,
@@ -61244,7 +61215,7 @@ process.env.NODE_ENV !== "production" ? Menu.propTypes = {
   className: _react.PropTypes.string,
 
   /** Additional colors can be specified. */
-  color: _react.PropTypes.oneOf(_meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** A menu can take up only the space necessary to fit its content. */
   compact: _react.PropTypes.bool,
@@ -61253,16 +61224,16 @@ process.env.NODE_ENV !== "production" ? Menu.propTypes = {
   defaultActiveIndex: _react.PropTypes.number,
 
   /** A menu can be fixed to a side of its context. */
-  fixed: _react.PropTypes.oneOf(_meta.props.fixed),
+  fixed: _react.PropTypes.oneOf(['left', 'right', 'bottom', 'top']),
 
   /** A menu can be floated. */
-  floated: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.floated)]),
+  floated: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['right'])]),
 
   /** A vertical menu may take the size of its container. */
   fluid: _react.PropTypes.bool,
 
   /** A menu may have labeled icons. */
-  icon: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.icon)]),
+  icon: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['labeled'])]),
 
   /** A menu may have its colors inverted to show greater contrast. */
   inverted: _react.PropTypes.bool,
@@ -61287,11 +61258,14 @@ process.env.NODE_ENV !== "production" ? Menu.propTypes = {
   /** A menu can adjust its appearance to de-emphasize its contents. */
   secondary: _react.PropTypes.bool,
 
+  /** A menu can vary in size. */
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'medium', 'big')),
+
   /** A menu can stack at mobile resolutions. */
   stackable: _react.PropTypes.bool,
 
   /** A menu can be formatted to show tabs of information. */
-  tabular: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.tabular)]),
+  tabular: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['right'])]),
 
   /** A menu can be formatted for text content. */
   text: _react.PropTypes.bool,
@@ -61299,11 +61273,8 @@ process.env.NODE_ENV !== "production" ? Menu.propTypes = {
   /** A vertical menu displays elements vertically. */
   vertical: _react.PropTypes.bool,
 
-  /** A menu can vary in size. */
-  size: _react.PropTypes.oneOf(_meta.props.size),
-
   /** A menu can have its items divided evenly. */
-  widths: _react.PropTypes.oneOf(_meta.props.widths)
+  widths: _react.PropTypes.oneOf(_lib.SUI.WIDTHS)
 } : void 0;
 Menu.handledProps = ['activeIndex', 'as', 'attached', 'borderless', 'children', 'className', 'color', 'compact', 'defaultActiveIndex', 'fixed', 'floated', 'fluid', 'icon', 'inverted', 'items', 'onItemClick', 'pagination', 'pointing', 'secondary', 'size', 'stackable', 'tabular', 'text', 'vertical', 'widths'];
 exports.default = Menu;
@@ -61336,12 +61307,15 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A menu item may include a header or may itself be a header.
+ */
 function MenuHeader(props) {
   var children = props.children,
       className = props.className,
       content = props.content;
 
-  var classes = (0, _classnames2.default)(className, 'header');
+  var classes = (0, _classnames2.default)('header', className);
   var rest = (0, _lib.getUnhandledProps)(MenuHeader, props);
   var ElementType = (0, _lib.getElementType)(MenuHeader, props);
 
@@ -61427,17 +61401,9 @@ var _Icon2 = _interopRequireDefault(_Icon);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _meta = {
-  name: 'MenuItem',
-  type: _lib.META.TYPES.COLLECTION,
-  parent: 'Menu',
-  props: {
-    color: _lib.SUI.COLORS,
-    fitted: ['horizontally', 'vertically'],
-    position: ['right']
-  }
-};
-
+/**
+ * A menu can contain an item.
+ */
 var MenuItem = function (_Component) {
   (0, _inherits3.default)(MenuItem, _Component);
 
@@ -61503,7 +61469,11 @@ var MenuItem = function (_Component) {
   return MenuItem;
 }(_react.Component);
 
-MenuItem._meta = _meta;
+MenuItem._meta = {
+  name: 'MenuItem',
+  type: _lib.META.TYPES.COLLECTION,
+  parent: 'Menu'
+};
 exports.default = MenuItem;
 process.env.NODE_ENV !== "production" ? MenuItem.propTypes = {
   /** An element type to render as (string or function). */
@@ -61519,13 +61489,13 @@ process.env.NODE_ENV !== "production" ? MenuItem.propTypes = {
   className: _react.PropTypes.string,
 
   /** Additional colors can be specified. */
-  color: _react.PropTypes.oneOf(_meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** Shorthand for primary content. */
   content: _lib.customPropTypes.contentShorthand,
 
   /** A menu item or menu can remove element padding, vertically or horizontally. */
-  fitted: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.fitted)]),
+  fitted: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['horizontally', 'vertically'])]),
 
   /** A menu item may include a header or may itself be a header. */
   header: _react.PropTypes.bool,
@@ -61552,7 +61522,7 @@ process.env.NODE_ENV !== "production" ? MenuItem.propTypes = {
   onClick: _react.PropTypes.func,
 
   /** A menu item can take right position. */
-  position: _react.PropTypes.oneOf(_meta.props.position)
+  position: _react.PropTypes.oneOf(['right'])
 } : void 0;
 MenuItem.handledProps = ['active', 'as', 'children', 'className', 'color', 'content', 'fitted', 'header', 'icon', 'index', 'link', 'name', 'onClick', 'position'];
 
@@ -61585,12 +61555,16 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A menu can contain a sub menu.
+ */
 function MenuMenu(props) {
   var children = props.children,
       className = props.className,
       position = props.position;
 
-  var classes = (0, _classnames2.default)(className, position, 'menu');
+
+  var classes = (0, _classnames2.default)(position, 'menu', className);
   var rest = (0, _lib.getUnhandledProps)(MenuMenu, props);
   var ElementType = (0, _lib.getElementType)(MenuMenu, props);
 
@@ -61605,10 +61579,7 @@ MenuMenu.handledProps = ['as', 'children', 'className', 'position'];
 MenuMenu._meta = {
   name: 'MenuMenu',
   type: _lib.META.TYPES.COLLECTION,
-  parent: 'Menu',
-  props: {
-    position: ['right']
-  }
+  parent: 'Menu'
 };
 
 process.env.NODE_ENV !== "production" ? MenuMenu.propTypes = {
@@ -61622,7 +61593,7 @@ process.env.NODE_ENV !== "production" ? MenuMenu.propTypes = {
   className: _react.PropTypes.string,
 
   /** A sub menu can take right position. */
-  position: _react.PropTypes.oneOf(MenuMenu._meta.props.position)
+  position: _react.PropTypes.oneOf(['right'])
 } : void 0;
 
 exports.default = MenuMenu;
@@ -61654,21 +61625,37 @@ var _extends2 = require('babel-runtime/helpers/extends');
 
 var _extends3 = _interopRequireDefault(_extends2);
 
-var _without2 = require('lodash/without');
+var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
-var _without3 = _interopRequireDefault(_without2);
+var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+var _createClass2 = require('babel-runtime/helpers/createClass');
+
+var _createClass3 = _interopRequireDefault(_createClass2);
+
+var _possibleConstructorReturn2 = require('babel-runtime/helpers/possibleConstructorReturn');
+
+var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
+
+var _inherits2 = require('babel-runtime/helpers/inherits');
+
+var _inherits3 = _interopRequireDefault(_inherits2);
 
 var _isNil2 = require('lodash/isNil');
 
 var _isNil3 = _interopRequireDefault(_isNil2);
 
-var _react = require('react');
+var _without2 = require('lodash/without');
 
-var _react2 = _interopRequireDefault(_react);
+var _without3 = _interopRequireDefault(_without2);
 
 var _classnames = require('classnames');
 
 var _classnames2 = _interopRequireDefault(_classnames);
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
 
 var _lib = require('../../lib');
 
@@ -61695,78 +61682,107 @@ var _MessageItem2 = _interopRequireDefault(_MessageItem);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * A message displays information that explains nearby content
+ * A message displays information that explains nearby content.
  * @see Form
  */
-function Message(props) {
-  var children = props.children,
-      className = props.className,
-      content = props.content,
-      header = props.header,
-      icon = props.icon,
-      list = props.list,
-      onDismiss = props.onDismiss,
-      hidden = props.hidden,
-      visible = props.visible,
-      floating = props.floating,
-      compact = props.compact,
-      attached = props.attached,
-      warning = props.warning,
-      info = props.info,
-      positive = props.positive,
-      success = props.success,
-      negative = props.negative,
-      error = props.error,
-      color = props.color,
-      size = props.size;
+var Message = function (_Component) {
+  (0, _inherits3.default)(Message, _Component);
+
+  function Message() {
+    var _ref;
+
+    var _temp, _this, _ret;
+
+    (0, _classCallCheck3.default)(this, Message);
+
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return _ret = (_temp = (_this = (0, _possibleConstructorReturn3.default)(this, (_ref = Message.__proto__ || Object.getPrototypeOf(Message)).call.apply(_ref, [this].concat(args))), _this), _this.handleDismiss = function (e) {
+      var onDismiss = _this.props.onDismiss;
 
 
-  var classes = (0, _classnames2.default)('ui', size, color, (0, _lib.useKeyOnly)(icon, 'icon'), (0, _lib.useKeyOnly)(hidden, 'hidden'), (0, _lib.useKeyOnly)(visible, 'visible'), (0, _lib.useKeyOnly)(floating, 'floating'), (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), (0, _lib.useKeyOnly)(warning, 'warning'), (0, _lib.useKeyOnly)(info, 'info'), (0, _lib.useKeyOnly)(positive, 'positive'), (0, _lib.useKeyOnly)(success, 'success'), (0, _lib.useKeyOnly)(negative, 'negative'), (0, _lib.useKeyOnly)(error, 'error'), 'message', className);
-
-  var dismissIcon = onDismiss && _react2.default.createElement(_Icon2.default, { name: 'close', onClick: onDismiss });
-  var rest = (0, _lib.getUnhandledProps)(Message, props);
-  var ElementType = (0, _lib.getElementType)(Message, props);
-
-  if (!(0, _isNil3.default)(children)) {
-    return _react2.default.createElement(
-      ElementType,
-      (0, _extends3.default)({}, rest, { className: classes }),
-      dismissIcon,
-      children
-    );
+      if (onDismiss) onDismiss(e, _this.props);
+    }, _temp), (0, _possibleConstructorReturn3.default)(_this, _ret);
   }
 
-  return _react2.default.createElement(
-    ElementType,
-    (0, _extends3.default)({}, rest, { className: classes }),
-    dismissIcon,
-    _Icon2.default.create(icon),
-    (!(0, _isNil3.default)(header) || !(0, _isNil3.default)(content) || !(0, _isNil3.default)(list)) && _react2.default.createElement(
-      _MessageContent2.default,
-      null,
-      _MessageHeader2.default.create(header),
-      _MessageList2.default.create(list),
-      (0, _lib.createShorthand)('p', function (val) {
-        return { children: val };
-      }, content)
-    )
-  );
-}
+  (0, _createClass3.default)(Message, [{
+    key: 'render',
+    value: function render() {
+      var _props = this.props,
+          attached = _props.attached,
+          children = _props.children,
+          className = _props.className,
+          color = _props.color,
+          compact = _props.compact,
+          content = _props.content,
+          error = _props.error,
+          floating = _props.floating,
+          header = _props.header,
+          hidden = _props.hidden,
+          icon = _props.icon,
+          info = _props.info,
+          list = _props.list,
+          negative = _props.negative,
+          onDismiss = _props.onDismiss,
+          positive = _props.positive,
+          size = _props.size,
+          success = _props.success,
+          visible = _props.visible,
+          warning = _props.warning;
 
-Message.handledProps = ['as', 'attached', 'children', 'className', 'color', 'compact', 'content', 'error', 'floating', 'header', 'hidden', 'icon', 'info', 'list', 'negative', 'onDismiss', 'positive', 'size', 'success', 'visible', 'warning'];
+
+      var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useKeyOnly)(error, 'error'), (0, _lib.useKeyOnly)(floating, 'floating'), (0, _lib.useKeyOnly)(hidden, 'hidden'), (0, _lib.useKeyOnly)(icon, 'icon'), (0, _lib.useKeyOnly)(info, 'info'), (0, _lib.useKeyOnly)(negative, 'negative'), (0, _lib.useKeyOnly)(positive, 'positive'), (0, _lib.useKeyOnly)(success, 'success'), (0, _lib.useKeyOnly)(visible, 'visible'), (0, _lib.useKeyOnly)(warning, 'warning'), (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), 'message', className);
+
+      var dismissIcon = onDismiss && _react2.default.createElement(_Icon2.default, { name: 'close', onClick: this.handleDismiss });
+      var rest = (0, _lib.getUnhandledProps)(Message, this.props);
+      var ElementType = (0, _lib.getElementType)(Message, this.props);
+
+      if (!(0, _isNil3.default)(children)) {
+        return _react2.default.createElement(
+          ElementType,
+          (0, _extends3.default)({}, rest, { className: classes }),
+          dismissIcon,
+          children
+        );
+      }
+
+      return _react2.default.createElement(
+        ElementType,
+        (0, _extends3.default)({}, rest, { className: classes }),
+        dismissIcon,
+        _Icon2.default.create(icon),
+        (!(0, _isNil3.default)(header) || !(0, _isNil3.default)(content) || !(0, _isNil3.default)(list)) && _react2.default.createElement(
+          _MessageContent2.default,
+          null,
+          _MessageHeader2.default.create(header),
+          _MessageList2.default.create(list),
+          (0, _lib.createShorthand)('p', function (val) {
+            return { children: val };
+          }, content)
+        )
+      );
+    }
+  }]);
+  return Message;
+}(_react.Component);
+
 Message._meta = {
   name: 'Message',
-  type: _lib.META.TYPES.COLLECTION,
-  props: {
-    attached: ['bottom'],
-    color: _lib.SUI.COLORS,
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'medium')
-  }
+  type: _lib.META.TYPES.COLLECTION
 };
-
+Message.Content = _MessageContent2.default;
+Message.Header = _MessageHeader2.default;
+Message.List = _MessageList2.default;
+Message.Item = _MessageItem2.default;
+exports.default = Message;
 process.env.NODE_ENV !== "production" ? Message.propTypes = {
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
+
+  /** A message can be formatted to attach itself to other content. */
+  attached: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['bottom'])]),
 
   /** Primary content. */
   children: _react.PropTypes.node,
@@ -61774,44 +61790,47 @@ process.env.NODE_ENV !== "production" ? Message.propTypes = {
   /** Additional classes. */
   className: _react.PropTypes.string,
 
-  /** Shorthand for primary content. */
-  content: _lib.customPropTypes.contentShorthand,
-
-  /** Shorthand for MessageHeader. */
-  header: _lib.customPropTypes.itemShorthand,
-
-  /** A message can contain an icon. */
-  icon: _react.PropTypes.oneOfType([_react.PropTypes.bool, _lib.customPropTypes.itemShorthand]),
-
-  /** Array shorthand items for the MessageList. Mutually exclusive with children. */
-  list: _lib.customPropTypes.collectionShorthand,
-
-  /**
-   * A message that the user can choose to hide.
-   * Called when the user clicks the "x" icon. This also adds the "x" icon.
-   */
-  onDismiss: _react.PropTypes.func,
-
-  /** A message can be hidden. */
-  hidden: _react.PropTypes.bool,
-
-  /** A message can be set to visible to force itself to be shown. */
-  visible: _react.PropTypes.bool,
-
-  /** A message can float above content that it is related to. */
-  floating: _react.PropTypes.bool,
+  /** A message can be formatted to be different colors. */
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** A message can only take up the width of its content. */
   compact: _react.PropTypes.bool,
 
-  /** A message can be formatted to attach itself to other content. */
-  attached: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Message._meta.props.attached)]),
+  /** Shorthand for primary content. */
+  content: _lib.customPropTypes.contentShorthand,
 
-  /** A message may be formatted to display warning messages. */
-  warning: _react.PropTypes.bool,
+  /** A message may be formatted to display a negative message. Same as `negative`. */
+  error: _react.PropTypes.bool,
+
+  /** A message can float above content that it is related to. */
+  floating: _react.PropTypes.bool,
+
+  /** Shorthand for MessageHeader. */
+  header: _lib.customPropTypes.itemShorthand,
+
+  /** A message can be hidden. */
+  hidden: _react.PropTypes.bool,
+
+  /** A message can contain an icon. */
+  icon: _react.PropTypes.oneOfType([_lib.customPropTypes.itemShorthand, _react.PropTypes.bool]),
 
   /** A message may be formatted to display information. */
   info: _react.PropTypes.bool,
+
+  /** Array shorthand items for the MessageList. Mutually exclusive with children. */
+  list: _lib.customPropTypes.collectionShorthand,
+
+  /** A message may be formatted to display a negative message. Same as `error`. */
+  negative: _react.PropTypes.bool,
+
+  /**
+   * A message that the user can choose to hide.
+   * Called when the user clicks the "x" icon. This also adds the "x" icon.
+   *
+   * @param {SyntheticEvent} event - React's original SyntheticEvent.
+   * @param {object} data - All props.
+   */
+  onDismiss: _react.PropTypes.func,
 
   /** A message may be formatted to display a positive message.  Same as `success`. */
   positive: _react.PropTypes.bool,
@@ -61819,27 +61838,18 @@ process.env.NODE_ENV !== "production" ? Message.propTypes = {
   /** A message may be formatted to display a positive message.  Same as `positive`. */
   success: _react.PropTypes.bool,
 
-  /** A message may be formatted to display a negative message. Same as `error`. */
-  negative: _react.PropTypes.bool,
-
-  /** A message may be formatted to display a negative message. Same as `negative`. */
-  error: _react.PropTypes.bool,
-
-  /** A message can be formatted to be different colors. */
-  color: _react.PropTypes.oneOf(Message._meta.props.color),
-
   /** A message can have different sizes. */
-  size: _react.PropTypes.oneOf(Message._meta.props.size)
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'medium')),
+
+  /** A message can be set to visible to force itself to be shown. */
+  visible: _react.PropTypes.bool,
+
+  /** A message may be formatted to display warning messages. */
+  warning: _react.PropTypes.bool
 } : void 0;
-
-Message.Content = _MessageContent2.default;
-Message.Header = _MessageHeader2.default;
-Message.List = _MessageList2.default;
-Message.Item = _MessageItem2.default;
-
-exports.default = Message;
+Message.handledProps = ['as', 'attached', 'children', 'className', 'color', 'compact', 'content', 'error', 'floating', 'header', 'hidden', 'icon', 'info', 'list', 'negative', 'onDismiss', 'positive', 'size', 'success', 'visible', 'warning'];
 }).call(this,require('_process'))
-},{"../../elements/Icon":1060,"../../lib":1105,"./MessageContent":1030,"./MessageHeader":1031,"./MessageItem":1032,"./MessageList":1033,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/isNil":748,"lodash/without":791,"react":966}],1030:[function(require,module,exports){
+},{"../../elements/Icon":1060,"../../lib":1105,"./MessageContent":1030,"./MessageHeader":1031,"./MessageItem":1032,"./MessageList":1033,"_process":797,"babel-runtime/helpers/classCallCheck":11,"babel-runtime/helpers/createClass":12,"babel-runtime/helpers/extends":14,"babel-runtime/helpers/inherits":16,"babel-runtime/helpers/possibleConstructorReturn":18,"classnames":22,"lodash/isNil":748,"lodash/without":791,"react":966}],1030:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -61863,6 +61873,9 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A message can contain a content.
+ */
 function MessageContent(props) {
   var children = props.children,
       className = props.className;
@@ -61926,6 +61939,9 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A message can contain a header.
+ */
 function MessageHeader(props) {
   var children = props.children,
       className = props.className,
@@ -61956,11 +61972,11 @@ process.env.NODE_ENV !== "production" ? MessageHeader.propTypes = {
   /** Primary content. */
   children: _react.PropTypes.node,
 
-  /** Shorthand for primary content. */
-  content: _lib.customPropTypes.itemShorthand,
-
   /** Additional classes. */
-  className: _react.PropTypes.string
+  className: _react.PropTypes.string,
+
+  /** Shorthand for primary content. */
+  content: _lib.customPropTypes.itemShorthand
 } : void 0;
 
 MessageHeader.create = (0, _lib.createShorthandFactory)(MessageHeader, function (val) {
@@ -61981,6 +61997,10 @@ var _extends2 = require('babel-runtime/helpers/extends');
 
 var _extends3 = _interopRequireDefault(_extends2);
 
+var _isNil2 = require('lodash/isNil');
+
+var _isNil3 = _interopRequireDefault(_isNil2);
+
 var _classnames = require('classnames');
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -61993,6 +62013,9 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A message list can contain an item.
+ */
 function MessageItem(props) {
   var children = props.children,
       className = props.className,
@@ -62005,7 +62028,7 @@ function MessageItem(props) {
   return _react2.default.createElement(
     ElementType,
     (0, _extends3.default)({}, rest, { className: classes }),
-    content || children
+    (0, _isNil3.default)(children) ? content : children
   );
 }
 
@@ -62023,11 +62046,11 @@ process.env.NODE_ENV !== "production" ? MessageItem.propTypes = {
   /** Primary content. */
   children: _react.PropTypes.node,
 
-  /** Shorthand for primary content. */
-  content: _lib.customPropTypes.itemShorthand,
-
   /** Additional classes. */
-  className: _react.PropTypes.string
+  className: _react.PropTypes.string,
+
+  /** Shorthand for primary content. */
+  content: _lib.customPropTypes.itemShorthand
 } : void 0;
 
 MessageItem.defaultProps = {
@@ -62040,7 +62063,7 @@ MessageItem.create = (0, _lib.createShorthandFactory)(MessageItem, function (con
 
 exports.default = MessageItem;
 }).call(this,require('_process'))
-},{"../../lib":1105,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"react":966}],1033:[function(require,module,exports){
+},{"../../lib":1105,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/isNil":748,"react":966}],1033:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -62052,11 +62075,11 @@ var _extends2 = require('babel-runtime/helpers/extends');
 
 var _extends3 = _interopRequireDefault(_extends2);
 
-var _map2 = require('lodash/fp/map');
+var _map2 = require('lodash/map');
 
 var _map3 = _interopRequireDefault(_map2);
 
-var _isNil2 = require('lodash/fp/isNil');
+var _isNil2 = require('lodash/isNil');
 
 var _isNil3 = _interopRequireDefault(_isNil2);
 
@@ -62076,6 +62099,9 @@ var _MessageItem2 = _interopRequireDefault(_MessageItem);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A message can contain a list of items.
+ */
 function MessageList(props) {
   var children = props.children,
       className = props.className,
@@ -62088,7 +62114,7 @@ function MessageList(props) {
   return _react2.default.createElement(
     ElementType,
     (0, _extends3.default)({}, rest, { className: classes }),
-    (0, _isNil3.default)(children) ? (0, _map3.default)(_MessageItem2.default.create, items) : children
+    (0, _isNil3.default)(children) ? (0, _map3.default)(items, _MessageItem2.default.create) : children
   );
 }
 
@@ -62123,7 +62149,7 @@ MessageList.create = (0, _lib.createShorthandFactory)(MessageList, function (val
 
 exports.default = MessageList;
 }).call(this,require('_process'))
-},{"../../lib":1105,"./MessageItem":1032,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/fp/isNil":718,"lodash/fp/map":722,"react":966}],1034:[function(require,module,exports){
+},{"../../lib":1105,"./MessageItem":1032,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/isNil":748,"lodash/map":761,"react":966}],1034:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -62199,12 +62225,11 @@ var _TableRow2 = _interopRequireDefault(_TableRow);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * A table displays a collections of data grouped into rows
+ * A table displays a collections of data grouped into rows.
  */
 function Table(props) {
-  var basic = props.basic,
-      attached = props.attached,
-      renderBodyRow = props.renderBodyRow,
+  var attached = props.attached,
+      basic = props.basic,
       celled = props.celled,
       children = props.children,
       className = props.className,
@@ -62218,6 +62243,7 @@ function Table(props) {
       headerRow = props.headerRow,
       inverted = props.inverted,
       padded = props.padded,
+      renderBodyRow = props.renderBodyRow,
       selectable = props.selectable,
       singleLine = props.singleLine,
       size = props.size,
@@ -62229,7 +62255,7 @@ function Table(props) {
       unstackable = props.unstackable;
 
 
-  var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), (0, _lib.useKeyOrValueAndKey)(basic, 'basic'), (0, _lib.useKeyOnly)(celled, 'celled'), (0, _lib.useKeyOnly)(collapsing, 'collapsing'), (0, _lib.useKeyOrValueAndKey)(compact, 'compact'), (0, _lib.useKeyOnly)(definition, 'definition'), (0, _lib.useKeyOnly)(fixed, 'fixed'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOrValueAndKey)(padded, 'padded'), (0, _lib.useKeyOnly)(selectable, 'selectable'), (0, _lib.useKeyOnly)(singleLine, 'single line'), (0, _lib.useKeyOnly)(sortable, 'sortable'), (0, _lib.useKeyOnly)(stackable, 'stackable'), (0, _lib.useKeyOnly)(striped, 'striped'), (0, _lib.useKeyOnly)(structured, 'structured'), (0, _lib.useKeyOnly)(unstackable, 'unstackable'), (0, _lib.useWidthProp)(columns, 'column'), className, 'table');
+  var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useKeyOnly)(celled, 'celled'), (0, _lib.useKeyOnly)(collapsing, 'collapsing'), (0, _lib.useKeyOnly)(definition, 'definition'), (0, _lib.useKeyOnly)(fixed, 'fixed'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(selectable, 'selectable'), (0, _lib.useKeyOnly)(singleLine, 'single line'), (0, _lib.useKeyOnly)(sortable, 'sortable'), (0, _lib.useKeyOnly)(stackable, 'stackable'), (0, _lib.useKeyOnly)(striped, 'striped'), (0, _lib.useKeyOnly)(structured, 'structured'), (0, _lib.useKeyOnly)(unstackable, 'unstackable'), (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), (0, _lib.useKeyOrValueAndKey)(basic, 'basic'), (0, _lib.useKeyOrValueAndKey)(compact, 'compact'), (0, _lib.useKeyOrValueAndKey)(padded, 'padded'), (0, _lib.useWidthProp)(columns, 'column'), 'table', className);
   var rest = (0, _lib.getUnhandledProps)(Table, props);
   var ElementType = (0, _lib.getElementType)(Table, props);
 
@@ -62267,16 +62293,7 @@ function Table(props) {
 Table.handledProps = ['as', 'attached', 'basic', 'celled', 'children', 'className', 'collapsing', 'color', 'columns', 'compact', 'definition', 'fixed', 'footerRow', 'headerRow', 'inverted', 'padded', 'renderBodyRow', 'selectable', 'singleLine', 'size', 'sortable', 'stackable', 'striped', 'structured', 'tableData', 'unstackable'];
 Table._meta = {
   name: 'Table',
-  type: _lib.META.TYPES.COLLECTION,
-  props: {
-    attached: ['top', 'bottom'],
-    basic: ['very'],
-    color: _lib.SUI.COLORS,
-    columns: _lib.SUI.WIDTHS,
-    compact: ['very'],
-    padded: ['very'],
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'mini', 'tiny', 'medium', 'big', 'huge', 'massive')
-  }
+  type: _lib.META.TYPES.COLLECTION
 };
 
 Table.defaultProps = {
@@ -62288,10 +62305,10 @@ process.env.NODE_ENV !== "production" ? Table.propTypes = {
   as: _lib.customPropTypes.as,
 
   /** Attach table to other content */
-  attached: _react.PropTypes.oneOfType([_react.PropTypes.oneOf(Table._meta.props.attached), _react.PropTypes.bool]),
+  attached: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['top', 'bottom'])]),
 
   /** A table can reduce its complexity to increase readability. */
-  basic: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Table._meta.props.basic)]),
+  basic: _react.PropTypes.oneOfType([_react.PropTypes.oneOf(['very']), _react.PropTypes.bool]),
 
   /** A table may be divided each row into separate cells. */
   celled: _react.PropTypes.bool,
@@ -62306,13 +62323,13 @@ process.env.NODE_ENV !== "production" ? Table.propTypes = {
   collapsing: _react.PropTypes.bool,
 
   /** A table can be given a color to distinguish it from other tables. */
-  color: _react.PropTypes.oneOf(Table._meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** A table can specify its column count to divide its content evenly. */
-  columns: _react.PropTypes.oneOf(Table._meta.props.columns),
+  columns: _react.PropTypes.oneOf(_lib.SUI.WIDTHS),
 
   /** A table may sometimes need to be more compact to make more rows visible at a time. */
-  compact: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Table._meta.props.compact)]),
+  compact: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['very'])]),
 
   /** A table may be formatted to emphasize a first column that defines a rows content. */
   definition: _react.PropTypes.bool,
@@ -62332,7 +62349,7 @@ process.env.NODE_ENV !== "production" ? Table.propTypes = {
   inverted: _react.PropTypes.bool,
 
   /** A table may sometimes need to be more padded for legibility. */
-  padded: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Table._meta.props.padded)]),
+  padded: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['very'])]),
 
   /**
    * A function that takes (data, index) and returns shorthand for a TableRow
@@ -62347,7 +62364,7 @@ process.env.NODE_ENV !== "production" ? Table.propTypes = {
   singleLine: _react.PropTypes.bool,
 
   /** A table can also be small or large. */
-  size: _react.PropTypes.oneOf(Table._meta.props.size),
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'mini', 'tiny', 'medium', 'big', 'huge', 'massive')),
 
   /** A table may allow a user to sort contents by clicking on a table header. */
   sortable: _react.PropTypes.bool,
@@ -62452,6 +62469,10 @@ var _extends2 = require('babel-runtime/helpers/extends');
 
 var _extends3 = _interopRequireDefault(_extends2);
 
+var _without2 = require('lodash/without');
+
+var _without3 = _interopRequireDefault(_without2);
+
 var _isNil2 = require('lodash/isNil');
 
 var _isNil3 = _interopRequireDefault(_isNil2);
@@ -62472,6 +62493,9 @@ var _Icon2 = _interopRequireDefault(_Icon);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A table row can have cells.
+ */
 function TableCell(props) {
   var active = props.active,
       children = props.children,
@@ -62515,12 +62539,7 @@ TableCell.handledProps = ['active', 'as', 'children', 'className', 'collapsing',
 TableCell._meta = {
   name: 'TableCell',
   type: _lib.META.TYPES.COLLECTION,
-  parent: 'Table',
-  props: {
-    textAlign: _lib.SUI.TEXT_ALIGNMENTS,
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS,
-    width: _lib.SUI.WIDTHS
-  }
+  parent: 'Table'
 };
 
 TableCell.defaultProps = {
@@ -62568,16 +62587,16 @@ process.env.NODE_ENV !== "production" ? TableCell.propTypes = {
   singleLine: _react.PropTypes.bool,
 
   /** A table cell can adjust its text alignment. */
-  textAlign: _react.PropTypes.oneOf(TableCell._meta.props.textAlign),
+  textAlign: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.TEXT_ALIGNMENTS, 'justified')),
 
   /** A table cell can adjust its text alignment. */
-  verticalAlign: _react.PropTypes.oneOf(TableCell._meta.props.verticalAlign),
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS),
 
   /** A cell may warn a user. */
   warning: _react.PropTypes.bool,
 
   /** A table can specify the width of individual columns independently. */
-  width: _react.PropTypes.oneOf(TableCell._meta.props.width)
+  width: _react.PropTypes.oneOf(_lib.SUI.WIDTHS)
 } : void 0;
 
 TableCell.create = (0, _lib.createShorthandFactory)(TableCell, function (content) {
@@ -62586,7 +62605,7 @@ TableCell.create = (0, _lib.createShorthandFactory)(TableCell, function (content
 
 exports.default = TableCell;
 }).call(this,require('_process'))
-},{"../../elements/Icon":1060,"../../lib":1105,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/isNil":748,"react":966}],1038:[function(require,module,exports){
+},{"../../elements/Icon":1060,"../../lib":1105,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/isNil":748,"lodash/without":791,"react":966}],1038:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -62605,6 +62624,9 @@ var _TableHeader2 = _interopRequireDefault(_TableHeader);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A table can have a footer.
+ */
 function TableFooter(props) {
   return _react2.default.createElement(_TableHeader2.default, props);
 }
@@ -62645,6 +62667,9 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A table can have a header.
+ */
 function TableHeader(props) {
   var children = props.children,
       className = props.className,
@@ -62716,6 +62741,9 @@ var _TableCell2 = _interopRequireDefault(_TableCell);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A table can have a header cell.
+ */
 function TableHeaderCell(props) {
   var as = props.as,
       className = props.className,
@@ -62723,17 +62751,15 @@ function TableHeaderCell(props) {
 
   var classes = (0, _classnames2.default)((0, _lib.useValueAndKey)(sorted, 'sorted'), className);
   var rest = (0, _lib.getUnhandledProps)(TableHeaderCell, props);
-  return _react2.default.createElement(_TableCell2.default, (0, _extends3.default)({ as: as }, rest, { className: classes }));
+
+  return _react2.default.createElement(_TableCell2.default, (0, _extends3.default)({}, rest, { as: as, className: classes }));
 }
 
 TableHeaderCell.handledProps = ['as', 'className', 'sorted'];
 TableHeaderCell._meta = {
   name: 'TableHeaderCell',
   type: _lib.META.TYPES.COLLECTION,
-  parent: 'Table',
-  props: {
-    sorted: ['ascending', 'descending']
-  }
+  parent: 'Table'
 };
 
 process.env.NODE_ENV !== "production" ? TableHeaderCell.propTypes = {
@@ -62744,7 +62770,7 @@ process.env.NODE_ENV !== "production" ? TableHeaderCell.propTypes = {
   className: _react.PropTypes.string,
 
   /** A header cell can be sorted in ascending or descending order. */
-  sorted: _react.PropTypes.oneOf(TableHeaderCell._meta.props.sorted)
+  sorted: _react.PropTypes.oneOf(['ascending', 'descending'])
 } : void 0;
 
 TableHeaderCell.defaultProps = {
@@ -62764,6 +62790,10 @@ Object.defineProperty(exports, "__esModule", {
 var _extends2 = require('babel-runtime/helpers/extends');
 
 var _extends3 = _interopRequireDefault(_extends2);
+
+var _without2 = require('lodash/without');
+
+var _without3 = _interopRequireDefault(_without2);
 
 var _map2 = require('lodash/map');
 
@@ -62789,6 +62819,9 @@ var _TableCell2 = _interopRequireDefault(_TableCell);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A table can have rows.
+ */
 function TableRow(props) {
   var active = props.active,
       cellAs = props.cellAs,
@@ -62829,11 +62862,7 @@ TableRow.handledProps = ['active', 'as', 'cellAs', 'cells', 'children', 'classNa
 TableRow._meta = {
   name: 'TableRow',
   type: _lib.META.TYPES.COLLECTION,
-  parent: 'Table',
-  props: {
-    textAlign: _lib.SUI.TEXT_ALIGNMENTS,
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS
-  }
+  parent: 'Table'
 };
 
 TableRow.defaultProps = {
@@ -62873,10 +62902,10 @@ process.env.NODE_ENV !== "production" ? TableRow.propTypes = {
   positive: _react.PropTypes.bool,
 
   /** A table row can adjust its text alignment. */
-  textAlign: _react.PropTypes.oneOf(TableRow._meta.props.textAlign),
+  textAlign: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.TEXT_ALIGNMENTS, 'justified')),
 
   /** A table row can adjust its vertical alignment. */
-  verticalAlign: _react.PropTypes.oneOf(TableRow._meta.props.verticalAlign),
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS),
 
   /** A row may warn a user. */
   warning: _react.PropTypes.bool
@@ -62888,7 +62917,7 @@ TableRow.create = (0, _lib.createShorthandFactory)(TableRow, function (cells) {
 
 exports.default = TableRow;
 }).call(this,require('_process'))
-},{"../../lib":1105,"./TableCell":1037,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/isNil":748,"lodash/map":761,"react":966}],1042:[function(require,module,exports){
+},{"../../lib":1105,"./TableCell":1037,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/isNil":748,"lodash/map":761,"lodash/without":791,"react":966}],1042:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -62911,6 +62940,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
+
+var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
+
 var _extends2 = require('babel-runtime/helpers/extends');
 
 var _extends3 = _interopRequireDefault(_extends2);
@@ -62930,10 +62963,6 @@ var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorRet
 var _inherits2 = require('babel-runtime/helpers/inherits');
 
 var _inherits3 = _interopRequireDefault(_inherits2);
-
-var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
-
-var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
 
 var _isNil2 = require('lodash/isNil');
 
@@ -62973,21 +63002,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var debug = (0, _lib.makeDebugger)('button');
 
-var _meta = {
-  name: 'Button',
-  type: _lib.META.TYPES.ELEMENT,
-  props: {
-    animated: ['fade', 'vertical'],
-    attached: ['left', 'right', 'top', 'bottom'],
-    color: [].concat((0, _toConsumableArray3.default)(_lib.SUI.COLORS), ['facebook', 'twitter', 'google plus', 'vk', 'linkedin', 'instagram', 'youtube']),
-    floated: _lib.SUI.FLOATS,
-    labelPosition: ['right', 'left'],
-    size: _lib.SUI.SIZES
-  }
-};
-
 /**
- * A Button indicates a possible user action
+ * A Button indicates a possible user action.
  * @see Form
  * @see Icon
  * @see Label
@@ -63019,6 +63035,15 @@ var Button = function (_Component) {
       }
 
       if (onClick) onClick(e, _this.props);
+    }, _this.computeTabIndex = function (ElementType) {
+      var _this$props2 = _this.props,
+          disabled = _this$props2.disabled,
+          tabIndex = _this$props2.tabIndex;
+
+
+      if (!(0, _isNil3.default)(tabIndex)) return tabIndex;
+      if (disabled) return -1;
+      if (ElementType === 'div') return 0;
     }, _temp), (0, _possibleConstructorReturn3.default)(_this, _ret);
   }
 
@@ -63049,27 +63074,24 @@ var Button = function (_Component) {
           primary = _props.primary,
           secondary = _props.secondary,
           size = _props.size,
-          tabIndex = _props.tabIndex,
           toggle = _props.toggle;
 
 
       var labeledClasses = (0, _classnames2.default)((0, _lib.useKeyOrValueAndKey)(labelPosition || !!label, 'labeled'));
 
-      var baseClasses = (0, _classnames2.default)(color, size, (0, _lib.useKeyOnly)(active, 'active'), (0, _lib.useKeyOrValueAndKey)(animated, 'animated'), (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), (0, _lib.useKeyOnly)(basic, 'basic'), (0, _lib.useKeyOnly)(circular, 'circular'), (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useKeyOnly)(disabled, 'disabled'), (0, _lib.useValueAndKey)(floated, 'floated'), (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOnly)(icon === true || icon && (labelPosition || !children && !content), 'icon'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(loading, 'loading'), (0, _lib.useKeyOnly)(negative, 'negative'), (0, _lib.useKeyOnly)(positive, 'positive'), (0, _lib.useKeyOnly)(primary, 'primary'), (0, _lib.useKeyOnly)(secondary, 'secondary'), (0, _lib.useKeyOnly)(toggle, 'toggle'));
+      var baseClasses = (0, _classnames2.default)(color, size, (0, _lib.useKeyOnly)(active, 'active'), (0, _lib.useKeyOnly)(basic, 'basic'), (0, _lib.useKeyOnly)(circular, 'circular'), (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useKeyOnly)(disabled, 'disabled'), (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOnly)(icon === true || icon && (labelPosition || !children && !content), 'icon'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(loading, 'loading'), (0, _lib.useKeyOnly)(negative, 'negative'), (0, _lib.useKeyOnly)(positive, 'positive'), (0, _lib.useKeyOnly)(primary, 'primary'), (0, _lib.useKeyOnly)(secondary, 'secondary'), (0, _lib.useKeyOnly)(toggle, 'toggle'), (0, _lib.useKeyOrValueAndKey)(animated, 'animated'), (0, _lib.useKeyOrValueAndKey)(attached, 'attached'), (0, _lib.useValueAndKey)(floated, 'floated'));
       var rest = (0, _lib.getUnhandledProps)(Button, this.props);
       var ElementType = (0, _lib.getElementType)(Button, this.props, function () {
         if (!(0, _isNil3.default)(label) || !(0, _isNil3.default)(attached)) return 'div';
       });
-
-      var computedTabIndex = void 0;
-      if (!(0, _isNil3.default)(tabIndex)) computedTabIndex = tabIndex;else if (disabled) computedTabIndex = -1;else if (ElementType === 'div') computedTabIndex = 0;
+      var tabIndex = this.computeTabIndex(ElementType);
 
       if (!(0, _isNil3.default)(children)) {
         var _classes = (0, _classnames2.default)('ui', baseClasses, labeledClasses, 'button', className);
         debug('render children:', { classes: _classes });
         return _react2.default.createElement(
           ElementType,
-          (0, _extends3.default)({}, rest, { className: _classes, tabIndex: computedTabIndex, onClick: this.handleClick }),
+          (0, _extends3.default)({}, rest, { className: _classes, tabIndex: tabIndex, onClick: this.handleClick }),
           children
         );
       }
@@ -63103,7 +63125,7 @@ var Button = function (_Component) {
         debug('render icon && !label:', { classes: _classes3 });
         return _react2.default.createElement(
           ElementType,
-          (0, _extends3.default)({}, rest, { className: _classes3, tabIndex: computedTabIndex, onClick: this.handleClick }),
+          (0, _extends3.default)({}, rest, { className: _classes3, tabIndex: tabIndex, onClick: this.handleClick }),
           _Icon2.default.create(icon),
           ' ',
           content
@@ -63115,7 +63137,7 @@ var Button = function (_Component) {
 
       return _react2.default.createElement(
         ElementType,
-        (0, _extends3.default)({}, rest, { className: classes, tabIndex: computedTabIndex, onClick: this.handleClick }),
+        (0, _extends3.default)({}, rest, { className: classes, tabIndex: tabIndex, onClick: this.handleClick }),
         content
       );
     }
@@ -63126,7 +63148,10 @@ var Button = function (_Component) {
 Button.defaultProps = {
   as: 'button'
 };
-Button._meta = _meta;
+Button._meta = {
+  name: 'Button',
+  type: _lib.META.TYPES.ELEMENT
+};
 Button.Content = _ButtonContent2.default;
 Button.Group = _ButtonGroup2.default;
 Button.Or = _ButtonOr2.default;
@@ -63134,16 +63159,16 @@ process.env.NODE_ENV !== "production" ? Button.propTypes = {
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
 
-  /** A button can show it is currently the active user selection */
+  /** A button can show it is currently the active user selection. */
   active: _react.PropTypes.bool,
 
-  /** A button can animate to show hidden content */
-  animated: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.animated)]),
+  /** A button can animate to show hidden content. */
+  animated: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['fade', 'vertical'])]),
 
-  /** A button can be attached to the top or bottom of other content */
-  attached: _react.PropTypes.oneOf(_meta.props.attached),
+  /** A button can be attached to the top or bottom of other content. */
+  attached: _react.PropTypes.oneOf(['left', 'right', 'top', 'bottom']),
 
-  /** A basic button is less pronounced */
+  /** A basic button is less pronounced. */
   basic: _react.PropTypes.bool,
 
   /** Primary content. */
@@ -63151,46 +63176,46 @@ process.env.NODE_ENV !== "production" ? Button.propTypes = {
     icon: _react.PropTypes.oneOfType([_react.PropTypes.string.isRequired, _react.PropTypes.object.isRequired, _react.PropTypes.element.isRequired])
   }, _lib.customPropTypes.disallow(['icon']))]),
 
-  /** A button can be circular */
-  circular: _react.PropTypes.bool,
-
   /** Additional classes. */
   className: _react.PropTypes.string,
+
+  /** A button can be circular. */
+  circular: _react.PropTypes.bool,
+
+  /** A button can have different colors */
+  color: _react.PropTypes.oneOf([].concat((0, _toConsumableArray3.default)(_lib.SUI.COLORS), ['facebook', 'google plus', 'instagram', 'linkedin', 'twitter', 'vk', 'youtube'])),
+
+  /** A button can reduce its padding to fit into tighter spaces. */
+  compact: _react.PropTypes.bool,
 
   /** Shorthand for primary content. */
   content: _lib.customPropTypes.contentShorthand,
 
-  /** A button can have different colors */
-  color: _react.PropTypes.oneOf(_meta.props.color),
-
-  /** A button can reduce its padding to fit into tighter spaces */
-  compact: _react.PropTypes.bool,
-
-  /** A button can show it is currently unable to be interacted with */
+  /** A button can show it is currently unable to be interacted with. */
   disabled: _react.PropTypes.bool,
 
-  /** A button can be aligned to the left or right of its container */
-  floated: _react.PropTypes.oneOf(_meta.props.floated),
+  /** A button can be aligned to the left or right of its container. */
+  floated: _react.PropTypes.oneOf(_lib.SUI.FLOATS),
 
-  /** A button can take the width of its container */
+  /** A button can take the width of its container. */
   fluid: _react.PropTypes.bool,
 
-  /** Add an Icon by name, props object, or pass an <Icon /> */
+  /** Add an Icon by name, props object, or pass an <Icon />. */
   icon: _lib.customPropTypes.some([_react.PropTypes.bool, _react.PropTypes.string, _react.PropTypes.object, _react.PropTypes.element]),
 
-  /** A button can be formatted to appear on dark backgrounds */
+  /** A button can be formatted to appear on dark backgrounds. */
   inverted: _react.PropTypes.bool,
 
-  /** A labeled button can format a Label or Icon to appear on the left or right */
-  labelPosition: _react.PropTypes.oneOf(_meta.props.labelPosition),
-
-  /** Add a Label by text, props object, or pass a <Label /> */
+  /** Add a Label by text, props object, or pass a <Label />. */
   label: _lib.customPropTypes.some([_react.PropTypes.string, _react.PropTypes.object, _react.PropTypes.element]),
 
-  /** A button can show a loading indicator */
+  /** A labeled button can format a Label or Icon to appear on the left or right. */
+  labelPosition: _react.PropTypes.oneOf(['right', 'left']),
+
+  /** A button can show a loading indicator. */
   loading: _react.PropTypes.bool,
 
-  /** A button can hint towards a negative consequence */
+  /** A button can hint towards a negative consequence. */
   negative: _react.PropTypes.bool,
 
   /**
@@ -63200,22 +63225,22 @@ process.env.NODE_ENV !== "production" ? Button.propTypes = {
    */
   onClick: _react.PropTypes.func,
 
-  /** A button can hint towards a positive consequence */
+  /** A button can hint towards a positive consequence. */
   positive: _react.PropTypes.bool,
 
-  /** A button can be formatted to show different levels of emphasis */
+  /** A button can be formatted to show different levels of emphasis. */
   primary: _react.PropTypes.bool,
 
-  /** A button can be formatted to show different levels of emphasis */
+  /** A button can be formatted to show different levels of emphasis. */
   secondary: _react.PropTypes.bool,
 
-  /** A button can have different sizes */
-  size: _react.PropTypes.oneOf(_meta.props.size),
+  /** A button can have different sizes. */
+  size: _react.PropTypes.oneOf(_lib.SUI.SIZES),
 
   /** A button can receive focus. */
-  tabIndex: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number]),
+  tabIndex: _react.PropTypes.oneOfType([_react.PropTypes.number, _react.PropTypes.string]),
 
-  /** A button can be formatted to toggle on and off */
+  /** A button can be formatted to toggle on and off. */
   toggle: _react.PropTypes.bool
 } : void 0;
 Button.handledProps = ['active', 'animated', 'as', 'attached', 'basic', 'children', 'circular', 'className', 'color', 'compact', 'content', 'disabled', 'floated', 'fluid', 'icon', 'inverted', 'label', 'labelPosition', 'loading', 'negative', 'onClick', 'positive', 'primary', 'secondary', 'size', 'tabIndex', 'toggle'];
@@ -63252,7 +63277,7 @@ var _lib = require('../../lib');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * Used in some Button types, such as `animated`
+ * Used in some Button types, such as `animated`.
  */
 function ButtonContent(props) {
   var children = props.children,
@@ -63282,16 +63307,16 @@ process.env.NODE_ENV !== "production" ? ButtonContent.propTypes = {
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
 
-  /** Additional classes. */
-  className: _react.PropTypes.string,
-
   /** Primary content. */
   children: _react.PropTypes.node,
 
-  /** Initially hidden, visible on hover */
+  /** Additional classes. */
+  className: _react.PropTypes.string,
+
+  /** Initially hidden, visible on hover. */
   hidden: _react.PropTypes.bool,
 
-  /** Initially visible, hidden on hover */
+  /** Initially visible, hidden on hover. */
   visible: _react.PropTypes.bool
 } : void 0;
 
@@ -63322,7 +63347,7 @@ var _lib = require('../../lib');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * Button.Group
+ * Buttons can be grouped.
  */
 function ButtonGroup(props) {
   var attached = props.attached,
@@ -63331,6 +63356,7 @@ function ButtonGroup(props) {
       className = props.className,
       color = props.color,
       compact = props.compact,
+      floated = props.floated,
       fluid = props.fluid,
       icon = props.icon,
       inverted = props.inverted,
@@ -63345,8 +63371,7 @@ function ButtonGroup(props) {
       widths = props.widths;
 
 
-  var classes = (0, _classnames2.default)('ui', size, color, (0, _lib.useValueAndKey)(attached, 'attached'), (0, _lib.useKeyOnly)(basic, 'basic'), (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOnly)(icon, 'icon'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(labeled, 'labeled'), (0, _lib.useKeyOnly)(negative, 'negative'), (0, _lib.useKeyOnly)(positive, 'positive'), (0, _lib.useKeyOnly)(primary, 'primary'), (0, _lib.useKeyOnly)(secondary, 'secondary'), (0, _lib.useKeyOnly)(toggle, 'toggle'), (0, _lib.useKeyOnly)(vertical, 'vertical'), (0, _lib.useWidthProp)(widths), 'buttons', className);
-
+  var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useKeyOnly)(basic, 'basic'), (0, _lib.useKeyOnly)(compact, 'compact'), (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOnly)(icon, 'icon'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(labeled, 'labeled'), (0, _lib.useKeyOnly)(negative, 'negative'), (0, _lib.useKeyOnly)(positive, 'positive'), (0, _lib.useKeyOnly)(primary, 'primary'), (0, _lib.useKeyOnly)(secondary, 'secondary'), (0, _lib.useKeyOnly)(toggle, 'toggle'), (0, _lib.useKeyOnly)(vertical, 'vertical'), (0, _lib.useValueAndKey)(attached, 'attached'), (0, _lib.useValueAndKey)(floated, 'floated'), (0, _lib.useWidthProp)(widths), 'buttons', className);
   var rest = (0, _lib.getUnhandledProps)(ButtonGroup, props);
   var ElementType = (0, _lib.getElementType)(ButtonGroup, props);
 
@@ -63357,76 +63382,73 @@ function ButtonGroup(props) {
   );
 }
 
-ButtonGroup.handledProps = ['as', 'attached', 'basic', 'children', 'className', 'color', 'compact', 'fluid', 'icon', 'inverted', 'labeled', 'negative', 'positive', 'primary', 'secondary', 'size', 'toggle', 'vertical', 'widths'];
+ButtonGroup.handledProps = ['as', 'attached', 'basic', 'children', 'className', 'color', 'compact', 'floated', 'fluid', 'icon', 'inverted', 'labeled', 'negative', 'positive', 'primary', 'secondary', 'size', 'toggle', 'vertical', 'widths'];
 ButtonGroup._meta = {
   name: 'ButtonGroup',
   parent: 'Button',
-  type: _lib.META.TYPES.ELEMENT,
-  props: {
-    attached: ['left', 'right', 'top', 'bottom'],
-    color: _lib.SUI.COLORS,
-    size: _lib.SUI.SIZES,
-    widths: _lib.SUI.WIDTHS
-  }
+  type: _lib.META.TYPES.ELEMENT
 };
 
 process.env.NODE_ENV !== "production" ? ButtonGroup.propTypes = {
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
 
-  /** A button can be attached to the top or bottom of other content */
-  attached: _react.PropTypes.oneOf(ButtonGroup._meta.props.attached),
+  /** A button can be attached to the top or bottom of other content. */
+  attached: _react.PropTypes.oneOf(['left', 'right', 'top', 'bottom']),
 
-  /** Groups can be less pronounced */
+  /** Groups can be less pronounced. */
   basic: _react.PropTypes.bool,
-
-  /** Additional classes. */
-  className: _react.PropTypes.string,
 
   /** Primary content. */
   children: _react.PropTypes.node,
 
-  /** Groups can have a shared color */
-  color: _react.PropTypes.oneOf(ButtonGroup._meta.props.color),
+  /** Additional classes. */
+  className: _react.PropTypes.string,
 
-  /** Groups can reduce their padding to fit into tighter spaces */
+  /** Groups can have a shared color. */
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
+
+  /** Groups can reduce their padding to fit into tighter spaces. */
   compact: _react.PropTypes.bool,
 
-  /** Groups can take the width of their container */
+  /** Groups can be aligned to the left or right of its container. */
+  floated: _react.PropTypes.oneOf(_lib.SUI.FLOATS),
+
+  /** Groups can take the width of their container. */
   fluid: _react.PropTypes.bool,
 
-  /** Groups can be formatted as icons */
+  /** Groups can be formatted as icons. */
   icon: _react.PropTypes.bool,
 
-  /** Groups can be formatted to appear on dark backgrounds */
+  /** Groups can be formatted to appear on dark backgrounds. */
   inverted: _react.PropTypes.bool,
 
-  /** Groups can be formatted as labeled icon buttons */
+  /** Groups can be formatted as labeled icon buttons. */
   labeled: _react.PropTypes.bool,
 
-  /** Groups can hint towards a negative consequence */
+  /** Groups can hint towards a negative consequence. */
   negative: _react.PropTypes.bool,
 
-  /** Groups can hint towards a positive consequence */
+  /** Groups can hint towards a positive consequence. */
   positive: _react.PropTypes.bool,
 
-  /** Groups can be formatted to show different levels of emphasis */
+  /** Groups can be formatted to show different levels of emphasis. */
   primary: _react.PropTypes.bool,
 
-  /** Groups can be formatted to show different levels of emphasis */
+  /** Groups can be formatted to show different levels of emphasis. */
   secondary: _react.PropTypes.bool,
 
-  /** Groups can have different sizes */
-  size: _react.PropTypes.oneOf(ButtonGroup._meta.props.size),
+  /** Groups can have different sizes. */
+  size: _react.PropTypes.oneOf(_lib.SUI.SIZES),
 
-  /** Groups can be formatted to toggle on and off */
+  /** Groups can be formatted to toggle on and off. */
   toggle: _react.PropTypes.bool,
 
-  /** Groups can be formatted to appear vertically */
+  /** Groups can be formatted to appear vertically. */
   vertical: _react.PropTypes.bool,
 
-  /** Groups can have their widths divided evenly */
-  widths: _react.PropTypes.oneOf(ButtonGroup._meta.props.widths)
+  /** Groups can have their widths divided evenly. */
+  widths: _react.PropTypes.oneOf(_lib.SUI.WIDTHS)
 } : void 0;
 
 exports.default = ButtonGroup;
@@ -63456,7 +63478,7 @@ var _lib = require('../../lib');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * Used in some Button types, such as `animated`
+ * Used in some Button types, such as `animated`.
  */
 function ButtonOr(props) {
   var className = props.className;
@@ -64980,23 +65002,9 @@ var _LabelGroup2 = _interopRequireDefault(_LabelGroup);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _meta = {
-  name: 'Label',
-  type: _lib.META.TYPES.ELEMENT,
-  props: {
-    attached: ['top', 'bottom', 'top right', 'top left', 'bottom left', 'bottom right'],
-    color: _lib.SUI.COLORS,
-    corner: ['left', 'right'],
-    pointing: ['above', 'below', 'left', 'right'],
-    ribbon: ['right'],
-    size: _lib.SUI.SIZES
-  }
-};
-
 /**
- * A label displays content classification
+ * A label displays content classification.
  */
-
 var Label = function (_Component) {
   (0, _inherits3.default)(Label, _Component);
 
@@ -65083,11 +65091,10 @@ var Label = function (_Component) {
   return Label;
 }(_react.Component);
 
-// Label is not yet defined inside the class
-// Do not use a static property initializer
-
-
-Label._meta = _meta;
+Label._meta = {
+  name: 'Label',
+  type: _lib.META.TYPES.ELEMENT
+};
 Label.Detail = _LabelDetail2.default;
 Label.Group = _LabelGroup2.default;
 exports.default = Label;
@@ -65099,7 +65106,7 @@ process.env.NODE_ENV !== "production" ? Label.propTypes = {
   active: _react.PropTypes.bool,
 
   /** A label can attach to a content segment. */
-  attached: _react.PropTypes.oneOf(_meta.props.attached),
+  attached: _react.PropTypes.oneOf(['top', 'bottom', 'top right', 'top left', 'bottom left', 'bottom right']),
 
   /** A label can reduce its complexity. */
   basic: _react.PropTypes.bool,
@@ -65114,19 +65121,19 @@ process.env.NODE_ENV !== "production" ? Label.propTypes = {
   className: _react.PropTypes.string,
 
   /** Color of the label. */
-  color: _react.PropTypes.oneOf(_meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** Shorthand for primary content. */
   content: _lib.customPropTypes.contentShorthand,
 
   /** A label can position itself in the corner of an element. */
-  corner: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.corner)]),
+  corner: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['left', 'right'])]),
 
   /** Shorthand for LabelDetail. */
   detail: _lib.customPropTypes.itemShorthand,
 
   /** Formats the label as a dot. */
-  empty: _lib.customPropTypes.every([_lib.customPropTypes.demand(['circular']), _react.PropTypes.bool]),
+  empty: _lib.customPropTypes.every([_react.PropTypes.bool, _lib.customPropTypes.demand(['circular'])]),
 
   /** Float above another element in the upper right corner. */
   floating: _react.PropTypes.bool,
@@ -65139,9 +65146,6 @@ process.env.NODE_ENV !== "production" ? Label.propTypes = {
 
   /** A label can be formatted to emphasize an image or prop can be used as shorthand for Image. */
   image: _react.PropTypes.oneOfType([_react.PropTypes.bool, _lib.customPropTypes.itemShorthand]),
-
-  /** A label can point to content next to it. */
-  pointing: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.pointing)]),
 
   /**
    * Called on click.
@@ -65159,19 +65163,24 @@ process.env.NODE_ENV !== "production" ? Label.propTypes = {
    */
   onRemove: _react.PropTypes.func,
 
+  /** A label can point to content next to it. */
+  pointing: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['above', 'below', 'left', 'right'])]),
+
   /** Shorthand for Icon to appear as the last child and trigger onRemove. */
   removeIcon: _lib.customPropTypes.itemShorthand,
 
   /** A label can appear as a ribbon attaching itself to an element. */
-  ribbon: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.ribbon)]),
+  ribbon: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['right'])]),
 
   /** A label can have different sizes. */
-  size: _react.PropTypes.oneOf(_meta.props.size),
+  size: _react.PropTypes.oneOf(_lib.SUI.SIZES),
 
   /** A label can appear as a tag. */
   tag: _react.PropTypes.bool
 } : void 0;
 Label.handledProps = ['active', 'as', 'attached', 'basic', 'children', 'circular', 'className', 'color', 'content', 'corner', 'detail', 'empty', 'floating', 'horizontal', 'icon', 'image', 'onClick', 'onRemove', 'pointing', 'removeIcon', 'ribbon', 'size', 'tag'];
+
+
 Label.create = (0, _lib.createShorthandFactory)(Label, function (value) {
   return { content: value };
 });
@@ -65267,6 +65276,9 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A label can be grouped.
+ */
 function LabelGroup(props) {
   var children = props.children,
       circular = props.circular,
@@ -65291,11 +65303,7 @@ LabelGroup.handledProps = ['as', 'children', 'circular', 'className', 'color', '
 LabelGroup._meta = {
   name: 'LabelGroup',
   parent: 'Label',
-  type: _lib.META.TYPES.ELEMENT,
-  props: {
-    color: _lib.SUI.COLORS,
-    size: _lib.SUI.SIZES
-  }
+  type: _lib.META.TYPES.ELEMENT
 };
 
 process.env.NODE_ENV !== "production" ? LabelGroup.propTypes = {
@@ -65312,10 +65320,10 @@ process.env.NODE_ENV !== "production" ? LabelGroup.propTypes = {
   className: _react.PropTypes.string,
 
   /** Label group can share colors together. */
-  color: _react.PropTypes.oneOf(LabelGroup._meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** Label group can share sizes together. */
-  size: _react.PropTypes.oneOf(LabelGroup._meta.props.size),
+  size: _react.PropTypes.oneOf(_lib.SUI.SIZES),
 
   /** Label group can share tag formatting. */
   tag: _react.PropTypes.bool
@@ -65395,7 +65403,7 @@ var _ListList2 = _interopRequireDefault(_ListList);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * A list groups related content
+ * A list groups related content.
  */
 function List(props) {
   var animated = props.animated,
@@ -65411,8 +65419,8 @@ function List(props) {
       link = props.link,
       ordered = props.ordered,
       relaxed = props.relaxed,
-      size = props.size,
       selection = props.selection,
+      size = props.size,
       verticalAlign = props.verticalAlign;
 
 
@@ -65440,13 +65448,7 @@ function List(props) {
 List.handledProps = ['animated', 'as', 'bulleted', 'celled', 'children', 'className', 'divided', 'floated', 'horizontal', 'inverted', 'items', 'link', 'ordered', 'relaxed', 'selection', 'size', 'verticalAlign'];
 List._meta = {
   name: 'List',
-  type: _lib.META.TYPES.ELEMENT,
-  props: {
-    floated: _lib.SUI.FLOATS,
-    relaxed: ['very'],
-    size: _lib.SUI.SIZES,
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS
-  }
+  type: _lib.META.TYPES.ELEMENT
 };
 
 process.env.NODE_ENV !== "production" ? List.propTypes = {
@@ -65472,7 +65474,7 @@ process.env.NODE_ENV !== "production" ? List.propTypes = {
   divided: _react.PropTypes.bool,
 
   /** An list can be floated left or right. */
-  floated: _react.PropTypes.oneOf(List._meta.props.floated),
+  floated: _react.PropTypes.oneOf(_lib.SUI.FLOATS),
 
   /** A list can be formatted to have items appear horizontally. */
   horizontal: _react.PropTypes.bool,
@@ -65490,16 +65492,16 @@ process.env.NODE_ENV !== "production" ? List.propTypes = {
   ordered: _react.PropTypes.bool,
 
   /** A list can relax its padding to provide more negative space. */
-  relaxed: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(List._meta.props.relaxed)]),
+  relaxed: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['very'])]),
 
   /** A selection list formats list items as possible choices. */
   selection: _react.PropTypes.bool,
 
   /** A list can vary in size. */
-  size: _react.PropTypes.oneOf(List._meta.props.size),
+  size: _react.PropTypes.oneOf(_lib.SUI.SIZES),
 
   /** An element inside a list can be vertically aligned. */
-  verticalAlign: _react.PropTypes.oneOf(List._meta.props.verticalAlign)
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS)
 } : void 0;
 
 List.Content = _ListContent2.default;
@@ -65547,6 +65549,9 @@ var _ListHeader2 = _interopRequireDefault(_ListHeader);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A list item can contain a content.
+ */
 function ListContent(props) {
   var children = props.children,
       className = props.className,
@@ -65582,11 +65587,7 @@ ListContent.handledProps = ['as', 'children', 'className', 'content', 'descripti
 ListContent._meta = {
   name: 'ListContent',
   parent: 'List',
-  type: _lib.META.TYPES.ELEMENT,
-  props: {
-    floated: _lib.SUI.FLOATS,
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS
-  }
+  type: _lib.META.TYPES.ELEMENT
 };
 
 process.env.NODE_ENV !== "production" ? ListContent.propTypes = {
@@ -65606,13 +65607,13 @@ process.env.NODE_ENV !== "production" ? ListContent.propTypes = {
   description: _lib.customPropTypes.itemShorthand,
 
   /** An list content can be floated left or right. */
-  floated: _react.PropTypes.oneOf(ListContent._meta.props.floated),
+  floated: _react.PropTypes.oneOf(_lib.SUI.FLOATS),
 
   /** Shorthand for ListHeader. */
   header: _lib.customPropTypes.itemShorthand,
 
   /** An element inside a list can be vertically aligned. */
-  verticalAlign: _react.PropTypes.oneOf(ListContent._meta.props.verticalAlign)
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS)
 } : void 0;
 
 ListContent.create = (0, _lib.createShorthandFactory)(ListContent, function (content) {
@@ -65649,6 +65650,9 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A list item can contain a description.
+ */
 function ListDescription(props) {
   var children = props.children,
       className = props.className,
@@ -65720,12 +65724,15 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A list item can contain a header.
+ */
 function ListHeader(props) {
   var children = props.children,
       className = props.className,
       content = props.content;
 
-  var classes = (0, _classnames2.default)(className, 'header');
+  var classes = (0, _classnames2.default)('header', className);
   var rest = (0, _lib.getUnhandledProps)(ListHeader, props);
   var ElementType = (0, _lib.getElementType)(ListHeader, props);
 
@@ -65791,6 +65798,9 @@ var _Icon2 = _interopRequireDefault(_Icon);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A list item can contain an icon.
+ */
 function ListIcon(props) {
   var className = props.className,
       verticalAlign = props.verticalAlign;
@@ -65805,10 +65815,7 @@ ListIcon.handledProps = ['className', 'verticalAlign'];
 ListIcon._meta = {
   name: 'ListIcon',
   parent: 'List',
-  type: _lib.META.TYPES.ELEMENT,
-  props: {
-    verticalAlign: _lib.SUI.VERTICAL_ALIGNMENTS
-  }
+  type: _lib.META.TYPES.ELEMENT
 };
 
 process.env.NODE_ENV !== "production" ? ListIcon.propTypes = {
@@ -65816,7 +65823,7 @@ process.env.NODE_ENV !== "production" ? ListIcon.propTypes = {
   className: _react.PropTypes.string,
 
   /** An element inside a list can be vertically aligned. */
-  verticalAlign: _react.PropTypes.oneOf(ListIcon._meta.props.verticalAlign)
+  verticalAlign: _react.PropTypes.oneOf(_lib.SUI.VERTICAL_ALIGNMENTS)
 } : void 0;
 
 ListIcon.create = (0, _lib.createShorthandFactory)(ListIcon, function (name) {
@@ -65877,6 +65884,9 @@ var _ListIcon2 = _interopRequireDefault(_ListIcon);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A list item can contain a set of items.
+ */
 function ListItem(props) {
   var active = props.active,
       children = props.children,
@@ -65898,7 +65908,7 @@ function ListItem(props) {
   if (!(0, _isNil3.default)(children)) {
     return _react2.default.createElement(
       ElementType,
-      (0, _extends3.default)({}, rest, { role: 'listitem', className: classes }, valueProp),
+      (0, _extends3.default)({}, rest, valueProp, { role: 'listitem', className: classes }),
       children
     );
   }
@@ -65910,7 +65920,7 @@ function ListItem(props) {
   if (!(0, _react.isValidElement)(content) && (0, _isPlainObject3.default)(content)) {
     return _react2.default.createElement(
       ElementType,
-      (0, _extends3.default)({}, rest, { role: 'listitem', className: classes }, valueProp),
+      (0, _extends3.default)({}, rest, valueProp, { role: 'listitem', className: classes }),
       iconElement || imageElement,
       _ListContent2.default.create(content, { header: header, description: description })
     );
@@ -65922,7 +65932,7 @@ function ListItem(props) {
   if (iconElement || imageElement) {
     return _react2.default.createElement(
       ElementType,
-      (0, _extends3.default)({}, rest, { role: 'listitem', className: classes }, valueProp),
+      (0, _extends3.default)({}, rest, valueProp, { role: 'listitem', className: classes }),
       iconElement || imageElement,
       (content || headerElement || descriptionElement) && _react2.default.createElement(
         _ListContent2.default,
@@ -65936,7 +65946,7 @@ function ListItem(props) {
 
   return _react2.default.createElement(
     ElementType,
-    (0, _extends3.default)({}, rest, { role: 'listitem', className: classes }, valueProp),
+    (0, _extends3.default)({}, rest, valueProp, { role: 'listitem', className: classes }),
     headerElement,
     descriptionElement,
     content
@@ -66029,6 +66039,9 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A list can contain a sub list.
+ */
 function ListList(props) {
   var children = props.children,
       className = props.className;
@@ -66605,7 +66618,7 @@ process.env.NODE_ENV !== "production" ? Segment.propTypes = {
   tertiary: _react.PropTypes.bool,
 
   /** Formats content to be aligned as part of a vertical group. */
-  textAlign: _react.PropTypes.oneOf(_lib.SUI.TEXT_ALIGNMENTS),
+  textAlign: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.TEXT_ALIGNMENTS, 'justified')),
 
   /** Formats content to be aligned vertically. */
   vertical: _react.PropTypes.bool
@@ -66784,7 +66797,7 @@ var _StepTitle2 = _interopRequireDefault(_StepTitle);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * A step shows the completion status of an activity in a series of activities
+ * A step shows the completion status of an activity in a series of activities.
  */
 var Step = function (_Component) {
   (0, _inherits3.default)(Step, _Component);
@@ -66866,11 +66879,11 @@ process.env.NODE_ENV !== "production" ? Step.propTypes = {
   /** A step can be highlighted as active. */
   active: _react.PropTypes.bool,
 
-  /** Additional classes. */
-  className: _react.PropTypes.string,
-
   /** Primary content. */
   children: _react.PropTypes.node,
+
+  /** Additional classes. */
+  className: _react.PropTypes.string,
 
   /** A step can show that a user has completed it. */
   completed: _react.PropTypes.bool,
@@ -66881,14 +66894,14 @@ process.env.NODE_ENV !== "production" ? Step.propTypes = {
   /** Show that the Loader is inactive. */
   disabled: _react.PropTypes.bool,
 
+  /** Render as an `a` tag instead of a `div` and adds the href attribute. */
+  href: _react.PropTypes.string,
+
   /** Shorthand for Icon. */
   icon: _lib.customPropTypes.itemShorthand,
 
   /** A step can be link. */
   link: _react.PropTypes.bool,
-
-  /** Render as an `a` tag instead of a `div` and adds the href attribute. */
-  href: _react.PropTypes.string,
 
   /**
    * Called on click. When passed, the component will render as an `a`
@@ -66923,13 +66936,13 @@ var _isNil2 = require('lodash/isNil');
 
 var _isNil3 = _interopRequireDefault(_isNil2);
 
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
 var _classnames = require('classnames');
 
 var _classnames2 = _interopRequireDefault(_classnames);
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
 
 var _lib = require('../../lib');
 
@@ -66943,13 +66956,16 @@ var _StepTitle2 = _interopRequireDefault(_StepTitle);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A step can contain a content.
+ */
 function StepContent(props) {
   var children = props.children,
       className = props.className,
       description = props.description,
       title = props.title;
 
-  var classes = (0, _classnames2.default)(className, 'content');
+  var classes = (0, _classnames2.default)('content', className);
   var rest = (0, _lib.getUnhandledProps)(StepContent, props);
   var ElementType = (0, _lib.getElementType)(StepContent, props);
 
@@ -67032,7 +67048,7 @@ function StepDescription(props) {
       className = props.className,
       description = props.description;
 
-  var classes = (0, _classnames2.default)(className, 'description');
+  var classes = (0, _classnames2.default)('description', className);
   var rest = (0, _lib.getUnhandledProps)(StepDescription, props);
   var ElementType = (0, _lib.getElementType)(StepDescription, props);
 
@@ -67106,6 +67122,9 @@ var _Step2 = _interopRequireDefault(_Step);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A set of steps.
+ */
 function StepGroup(props) {
   var children = props.children,
       className = props.className,
@@ -67116,7 +67135,7 @@ function StepGroup(props) {
       stackable = props.stackable,
       vertical = props.vertical;
 
-  var classes = (0, _classnames2.default)('ui', (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOnly)(ordered, 'ordered'), (0, _lib.useValueAndKey)(stackable, 'stackable'), (0, _lib.useKeyOnly)(vertical, 'vertical'), size, className, 'steps');
+  var classes = (0, _classnames2.default)('ui', size, (0, _lib.useKeyOnly)(fluid, 'fluid'), (0, _lib.useKeyOnly)(ordered, 'ordered'), (0, _lib.useKeyOnly)(vertical, 'vertical'), (0, _lib.useValueAndKey)(stackable, 'stackable'), 'steps', className);
   var rest = (0, _lib.getUnhandledProps)(StepGroup, props);
   var ElementType = (0, _lib.getElementType)(StepGroup, props);
 
@@ -67144,10 +67163,6 @@ StepGroup.handledProps = ['as', 'children', 'className', 'fluid', 'items', 'orde
 StepGroup._meta = {
   name: 'StepGroup',
   parent: 'Step',
-  props: {
-    sizes: (0, _without3.default)(_lib.SUI.SIZES, 'medium'),
-    stackable: ['tablet']
-  },
   type: _lib.META.TYPES.ELEMENT
 };
 
@@ -67155,11 +67170,11 @@ process.env.NODE_ENV !== "production" ? StepGroup.propTypes = {
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
 
-  /** Additional classes. */
-  className: _react.PropTypes.string,
-
   /** Primary content. */
   children: _react.PropTypes.node,
+
+  /** Additional classes. */
+  className: _react.PropTypes.string,
 
   /** A fluid step takes up the width of its container. */
   fluid: _react.PropTypes.bool,
@@ -67171,10 +67186,10 @@ process.env.NODE_ENV !== "production" ? StepGroup.propTypes = {
   ordered: _react.PropTypes.bool,
 
   /** Steps can have different sizes. */
-  size: _react.PropTypes.oneOf(StepGroup._meta.props.sizes),
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'medium')),
 
   /** A step can stack vertically only on smaller screens. */
-  stackable: _react.PropTypes.oneOf(StepGroup._meta.props.stackable),
+  stackable: _react.PropTypes.oneOf(['tablet']),
 
   /** A step can be displayed stacked vertically. */
   vertical: _react.PropTypes.bool
@@ -67210,12 +67225,15 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A step can contain a title.
+ */
 function StepTitle(props) {
   var children = props.children,
       className = props.className,
       title = props.title;
 
-  var classes = (0, _classnames2.default)(className, 'title');
+  var classes = (0, _classnames2.default)('title', className);
   var rest = (0, _lib.getUnhandledProps)(StepTitle, props);
   var ElementType = (0, _lib.getElementType)(StepTitle, props);
 
@@ -71275,15 +71293,9 @@ var _DimmerDimmable2 = _interopRequireDefault(_DimmerDimmable);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _meta = {
-  name: 'Dimmer',
-  type: _lib.META.TYPES.MODULE
-};
-
 /**
  * A dimmer hides distractions to focus attention on particular content.
  */
-
 var Dimmer = function (_Component) {
   (0, _inherits3.default)(Dimmer, _Component);
 
@@ -71311,14 +71323,14 @@ var Dimmer = function (_Component) {
       if (onClick) onClick(e, _this.props);
       if (_this.center && _this.center !== e.target && _this.center.contains(e.target)) return;
       if (onClickOutside) onClickOutside(e, _this.props);
+    }, _this.handleCenterRef = function (c) {
+      return _this.center = c;
     }, _temp), (0, _possibleConstructorReturn3.default)(_this, _ret);
   }
 
   (0, _createClass3.default)(Dimmer, [{
     key: 'render',
     value: function render() {
-      var _this2 = this;
-
       var _props = this.props,
           active = _props.active,
           children = _props.children,
@@ -71334,15 +71346,19 @@ var Dimmer = function (_Component) {
       var rest = (0, _lib.getUnhandledProps)(Dimmer, this.props);
       var ElementType = (0, _lib.getElementType)(Dimmer, this.props);
 
-      var childrenJSX = ((0, _isNil3.default)(children) ? content : children) && _react2.default.createElement(
-        'div',
-        { className: 'content' },
-        _react2.default.createElement(
+      var childrenContent = (0, _isNil3.default)(children) ? content : children;
+
+      var dimmerElement = _react2.default.createElement(
+        ElementType,
+        (0, _extends3.default)({}, rest, { className: classes, onClick: this.handleClick }),
+        childrenContent && _react2.default.createElement(
           'div',
-          { className: 'center', ref: function ref(center) {
-              return _this2.center = center;
-            } },
-          (0, _isNil3.default)(children) ? content : children
+          { className: 'content' },
+          _react2.default.createElement(
+            'div',
+            { className: 'center', ref: this.handleCenterRef },
+            childrenContent
+          )
         )
       );
 
@@ -71357,29 +71373,20 @@ var Dimmer = function (_Component) {
             open: active,
             openOnTriggerClick: false
           },
-          _react2.default.createElement(
-            ElementType,
-            (0, _extends3.default)({}, rest, { className: classes, onClick: this.handleClick }),
-            childrenJSX
-          )
+          dimmerElement
         );
       }
 
-      return _react2.default.createElement(
-        ElementType,
-        (0, _extends3.default)({}, rest, { className: classes, onClick: this.handleClick }),
-        childrenJSX
-      );
+      return dimmerElement;
     }
   }]);
   return Dimmer;
 }(_react.Component);
 
-// Dimmer is not yet defined inside the class
-// Do not use a static property initializer
-
-
-Dimmer._meta = _meta;
+Dimmer._meta = {
+  name: 'Dimmer',
+  type: _lib.META.TYPES.MODULE
+};
 Dimmer.Dimmable = _DimmerDimmable2.default;
 exports.default = Dimmer;
 process.env.NODE_ENV !== "production" ? Dimmer.propTypes = {
@@ -71427,6 +71434,8 @@ process.env.NODE_ENV !== "production" ? Dimmer.propTypes = {
   simple: _react.PropTypes.bool
 } : void 0;
 Dimmer.handledProps = ['active', 'as', 'children', 'className', 'content', 'disabled', 'inverted', 'onClick', 'onClickOutside', 'page', 'simple'];
+
+
 Dimmer.create = (0, _lib.createShorthandFactory)(Dimmer, function (value) {
   return { content: value };
 });
@@ -71617,6 +71626,10 @@ var _includes2 = require('lodash/includes');
 
 var _includes3 = _interopRequireDefault(_includes2);
 
+var _isUndefined2 = require('lodash/isUndefined');
+
+var _isUndefined3 = _interopRequireDefault(_isUndefined2);
+
 var _has2 = require('lodash/has');
 
 var _has3 = _interopRequireDefault(_has2);
@@ -71676,6 +71689,7 @@ var _meta = {
  * A dropdown allows a user to select a value from a series of options.
  * @see Form
  * @see Select
+ * @see Menu
  */
 
 var Dropdown = function (_Component) {
@@ -71698,6 +71712,14 @@ var Dropdown = function (_Component) {
       var onChange = _this.props.onChange;
 
       if (onChange) onChange(e, (0, _extends3.default)({}, _this.props, { value: value }));
+    }, _this.closeOnChange = function (e) {
+      var _this$props = _this.props,
+          closeOnChange = _this$props.closeOnChange,
+          multiple = _this$props.multiple;
+
+      var shouldClose = (0, _isUndefined3.default)(closeOnChange) ? !multiple : closeOnChange;
+
+      if (shouldClose) _this.close(e);
     }, _this.closeOnEscape = function (e) {
       if (_lib.keyboardKey.getCode(e) !== _lib.keyboardKey.Escape) return;
       e.preventDefault();
@@ -71736,11 +71758,11 @@ var Dropdown = function (_Component) {
       e.preventDefault();
 
       _this.open(e);
-    }, _this.selectHighlightedItem = function (e) {
+    }, _this.makeSelectedItemActive = function (e) {
       var open = _this.state.open;
-      var _this$props = _this.props,
-          multiple = _this$props.multiple,
-          onAddItem = _this$props.onAddItem;
+      var _this$props2 = _this.props,
+          multiple = _this$props2.multiple,
+          onAddItem = _this$props2.onAddItem;
 
       var item = _this.getSelectedItem();
       var value = (0, _get6.default)(item, 'value');
@@ -71762,7 +71784,6 @@ var Dropdown = function (_Component) {
       } else {
         _this.setValue(value);
         _this.handleChange(e, value);
-        _this.close();
       }
     }, _this.selectItemOnEnter = function (e) {
       debug('selectItemOnEnter()');
@@ -71770,15 +71791,16 @@ var Dropdown = function (_Component) {
       if (_lib.keyboardKey.getCode(e) !== _lib.keyboardKey.Enter) return;
       e.preventDefault();
 
-      _this.selectHighlightedItem(e);
+      _this.makeSelectedItemActive(e);
+      _this.closeOnChange(e);
     }, _this.removeItemOnBackspace = function (e) {
       debug('removeItemOnBackspace()');
       debug(_lib.keyboardKey.getName(e));
       if (_lib.keyboardKey.getCode(e) !== _lib.keyboardKey.Backspace) return;
 
-      var _this$props2 = _this.props,
-          multiple = _this$props2.multiple,
-          search = _this$props2.search;
+      var _this$props3 = _this.props,
+          multiple = _this$props3.multiple,
+          search = _this$props3.search;
       var _this$state = _this.state,
           searchQuery = _this$state.searchQuery,
           value = _this$state.value;
@@ -71827,9 +71849,9 @@ var Dropdown = function (_Component) {
     }, _this.handleItemClick = function (e, item) {
       debug('handleItemClick()');
       debug(item);
-      var _this$props3 = _this.props,
-          multiple = _this$props3.multiple,
-          onAddItem = _this$props3.onAddItem;
+      var _this$props4 = _this.props,
+          multiple = _this$props4.multiple,
+          onAddItem = _this$props4.onAddItem;
       var value = item.value;
 
       // prevent toggle() in handleClick()
@@ -71855,34 +71877,40 @@ var Dropdown = function (_Component) {
       } else {
         _this.setValue(value);
         _this.handleChange(e, value);
-        _this.close();
       }
+      _this.closeOnChange(e);
     }, _this.handleFocus = function (e) {
       debug('handleFocus()');
       var onFocus = _this.props.onFocus;
+      var focus = _this.state.focus;
 
+      if (focus) return;
       if (onFocus) onFocus(e, _this.props);
       _this.setState({ focus: true });
     }, _this.handleBlur = function (e) {
       debug('handleBlur()');
-      var _this$props4 = _this.props,
-          multiple = _this$props4.multiple,
-          onBlur = _this$props4.onBlur,
-          selectOnBlur = _this$props4.selectOnBlur;
+      var _this$props5 = _this.props,
+          closeOnBlur = _this$props5.closeOnBlur,
+          multiple = _this$props5.multiple,
+          onBlur = _this$props5.onBlur,
+          selectOnBlur = _this$props5.selectOnBlur;
       // do not "blur" when the mouse is down inside of the Dropdown
 
       if (_this.isMouseDown) return;
       if (onBlur) onBlur(e, _this.props);
-      if (selectOnBlur && !multiple) _this.selectHighlightedItem(e);
+      if (selectOnBlur && !multiple) {
+        _this.makeSelectedItemActive(e);
+        if (closeOnBlur) _this.close();
+      }
       _this.setState({ focus: false, searchQuery: '' });
     }, _this.handleSearchChange = function (e) {
       debug('handleSearchChange()');
       debug(e.target.value);
       // prevent propagating to this.props.onChange()
       e.stopPropagation();
-      var _this$props5 = _this.props,
-          search = _this$props5.search,
-          onSearchChange = _this$props5.onSearchChange;
+      var _this$props6 = _this.props,
+          search = _this$props6.search,
+          onSearchChange = _this$props6.onSearchChange;
       var open = _this.state.open;
 
       var newQuery = e.target.value;
@@ -71899,12 +71927,12 @@ var Dropdown = function (_Component) {
     }, _this.getMenuOptions = function () {
       var value = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _this.state.value;
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _this.props.options;
-      var _this$props6 = _this.props,
-          multiple = _this$props6.multiple,
-          search = _this$props6.search,
-          allowAdditions = _this$props6.allowAdditions,
-          additionPosition = _this$props6.additionPosition,
-          additionLabel = _this$props6.additionLabel;
+      var _this$props7 = _this.props,
+          multiple = _this$props7.multiple,
+          search = _this$props7.search,
+          allowAdditions = _this$props7.allowAdditions,
+          additionPosition = _this$props7.additionPosition,
+          additionLabel = _this$props7.additionLabel;
       var searchQuery = _this.state.searchQuery;
 
 
@@ -71974,11 +72002,11 @@ var Dropdown = function (_Component) {
 
       return (0, _findIndex3.default)(options, ['value', value]);
     }, _this.getDropdownAriaOptions = function (ElementType) {
-      var _this$props7 = _this.props,
-          loading = _this$props7.loading,
-          disabled = _this$props7.disabled,
-          search = _this$props7.search,
-          multiple = _this$props7.multiple;
+      var _this$props8 = _this.props,
+          loading = _this$props8.loading,
+          disabled = _this$props8.disabled,
+          search = _this$props8.search,
+          multiple = _this$props8.multiple;
       var open = _this.state.open;
 
       var ariaOptions = {
@@ -71997,6 +72025,12 @@ var Dropdown = function (_Component) {
       var newState = {
         searchQuery: ''
       };
+
+      var _this$props9 = _this.props,
+          multiple = _this$props9.multiple,
+          search = _this$props9.search;
+
+      if (multiple && search && _this._search) _this._search.focus();
 
       _this.trySetState({ value: value }, newState);
       _this.setSelectedIndex(value);
@@ -72085,9 +72119,7 @@ var Dropdown = function (_Component) {
       _this.scrollSelectedItemIntoView();
     }, _this.scrollSelectedItemIntoView = function () {
       debug('scrollSelectedItemIntoView()');
-      // Do not access document when server side rendering
-      if (!_lib.isBrowser) return;
-      var menu = document.querySelector('.ui.dropdown.active.visible .menu.visible');
+      var menu = _this._dropdown.querySelector('.menu.visible');
       var item = menu.querySelector('.item.selected');
       debug('menu: ' + menu);
       debug('item: ' + item);
@@ -72102,10 +72134,10 @@ var Dropdown = function (_Component) {
     }, _this.open = function (e) {
       debug('open()');
 
-      var _this$props8 = _this.props,
-          disabled = _this$props8.disabled,
-          onOpen = _this$props8.onOpen,
-          search = _this$props8.search;
+      var _this$props10 = _this.props,
+          disabled = _this$props10.disabled,
+          onOpen = _this$props10.onOpen,
+          search = _this$props10.search;
 
       if (disabled) return;
       if (search && _this._search) _this._search.focus();
@@ -72122,22 +72154,27 @@ var Dropdown = function (_Component) {
       _this.trySetState({ open: false });
     }, _this.handleClose = function () {
       debug('handleClose()');
+      var hasSearchFocus = document.activeElement === _this._search;
+      var hasDropdownFocus = document.activeElement === _this._dropdown;
+      var hasFocus = hasSearchFocus || hasDropdownFocus;
       // https://github.com/Semantic-Org/Semantic-UI-React/issues/627
       // Blur the Dropdown on close so it is blurred after selecting an item.
       // This is to prevent it from re-opening when switching tabs after selecting an item.
-      _this._dropdown.blur();
+      if (!hasSearchFocus) {
+        _this._dropdown.blur();
+      }
 
       // We need to keep the virtual model in sync with the browser focus change
       // https://github.com/Semantic-Org/Semantic-UI-React/issues/692
-      _this.setState({ focus: false });
+      _this.setState({ focus: hasFocus });
     }, _this.toggle = function (e) {
       return _this.state.open ? _this.close(e) : _this.open(e);
     }, _this.renderText = function () {
-      var _this$props9 = _this.props,
-          multiple = _this$props9.multiple,
-          placeholder = _this$props9.placeholder,
-          search = _this$props9.search,
-          text = _this$props9.text;
+      var _this$props11 = _this.props,
+          multiple = _this$props11.multiple,
+          placeholder = _this$props11.placeholder,
+          search = _this$props11.search,
+          text = _this$props11.text;
       var _this$state2 = _this.state,
           searchQuery = _this$state2.searchQuery,
           value = _this$state2.value,
@@ -72165,11 +72202,11 @@ var Dropdown = function (_Component) {
     }, _this.renderHiddenInput = function () {
       debug('renderHiddenInput()');
       var value = _this.state.value;
-      var _this$props10 = _this.props,
-          multiple = _this$props10.multiple,
-          name = _this$props10.name,
-          options = _this$props10.options,
-          selection = _this$props10.selection;
+      var _this$props12 = _this.props,
+          multiple = _this$props12.multiple,
+          name = _this$props12.name,
+          options = _this$props12.options,
+          selection = _this$props12.selection;
 
       debug('name:      ' + name);
       debug('selection: ' + selection);
@@ -72190,11 +72227,11 @@ var Dropdown = function (_Component) {
         })
       );
     }, _this.renderSearchInput = function () {
-      var _this$props11 = _this.props,
-          disabled = _this$props11.disabled,
-          search = _this$props11.search,
-          name = _this$props11.name,
-          tabIndex = _this$props11.tabIndex;
+      var _this$props13 = _this.props,
+          disabled = _this$props13.disabled,
+          search = _this$props13.search,
+          name = _this$props13.name,
+          tabIndex = _this$props13.tabIndex;
       var searchQuery = _this.state.searchQuery;
 
 
@@ -72228,9 +72265,9 @@ var Dropdown = function (_Component) {
         }
       });
     }, _this.renderSearchSizer = function () {
-      var _this$props12 = _this.props,
-          search = _this$props12.search,
-          multiple = _this$props12.multiple;
+      var _this$props14 = _this.props,
+          search = _this$props14.search,
+          multiple = _this$props14.multiple;
 
 
       if (!(search && multiple)) return null;
@@ -72240,9 +72277,9 @@ var Dropdown = function (_Component) {
         } });
     }, _this.renderLabels = function () {
       debug('renderLabels()');
-      var _this$props13 = _this.props,
-          multiple = _this$props13.multiple,
-          renderLabel = _this$props13.renderLabel;
+      var _this$props15 = _this.props,
+          multiple = _this$props15.multiple,
+          renderLabel = _this$props15.renderLabel;
       var _this$state3 = _this.state,
           selectedLabel = _this$state3.selectedLabel,
           value = _this$state3.value;
@@ -72268,10 +72305,10 @@ var Dropdown = function (_Component) {
         return _Label2.default.create(renderLabel(item, index, defaultLabelProps), defaultLabelProps);
       });
     }, _this.renderOptions = function () {
-      var _this$props14 = _this.props,
-          multiple = _this$props14.multiple,
-          search = _this$props14.search,
-          noResultsMessage = _this$props14.noResultsMessage;
+      var _this$props16 = _this.props,
+          multiple = _this$props16.multiple,
+          search = _this$props16.search,
+          noResultsMessage = _this$props16.noResultsMessage;
       var _this$state4 = _this.state,
           selectedIndex = _this$state4.selectedIndex,
           value = _this$state4.value;
@@ -72304,9 +72341,9 @@ var Dropdown = function (_Component) {
         }));
       });
     }, _this.renderMenu = function () {
-      var _this$props15 = _this.props,
-          children = _this$props15.children,
-          header = _this$props15.header;
+      var _this$props17 = _this.props,
+          children = _this$props17.children,
+          header = _this$props17.header;
       var open = _this.state.open;
 
       var menuClasses = open ? 'visible' : '';
@@ -72406,15 +72443,15 @@ var Dropdown = function (_Component) {
         } else {
           document.addEventListener('keydown', this.moveSelectionOnKeyDown);
           document.addEventListener('keydown', this.selectItemOnEnter);
-          document.addEventListener('keydown', this.removeItemOnBackspace);
         }
+        document.addEventListener('keydown', this.removeItemOnBackspace);
       } else if (prevState.focus && !this.state.focus) {
         debug('dropdown blurred');
-        if (!this.isMouseDown) {
-          var closeOnBlur = this.props.closeOnBlur;
+        var closeOnBlur = this.props.closeOnBlur;
 
-          debug('mouse is not down, closing');
-          if (closeOnBlur) this.close();
+        if (!this.isMouseDown && closeOnBlur) {
+          debug('mouse is not down and closeOnBlur=true, closing');
+          this.close();
         }
         document.removeEventListener('keydown', this.openOnArrow);
         document.removeEventListener('keydown', this.openOnSpace);
@@ -72439,8 +72476,10 @@ var Dropdown = function (_Component) {
         document.removeEventListener('keydown', this.closeOnEscape);
         document.removeEventListener('keydown', this.moveSelectionOnKeyDown);
         document.removeEventListener('keydown', this.selectItemOnEnter);
-        document.removeEventListener('keydown', this.removeItemOnBackspace);
         document.removeEventListener('click', this.closeOnDocumentClick);
+        if (!this.state.focus) {
+          document.removeEventListener('keydown', this.removeItemOnBackspace);
+        }
       }
     }
   }, {
@@ -72525,6 +72564,7 @@ var Dropdown = function (_Component) {
           floating = _props2.floating,
           icon = _props2.icon,
           inline = _props2.inline,
+          item = _props2.item,
           labeled = _props2.labeled,
           multiple = _props2.multiple,
           pointing = _props2.pointing,
@@ -72545,10 +72585,7 @@ var Dropdown = function (_Component) {
       // https://github.com/Semantic-Org/Semantic-UI-React/issues/401#issuecomment-240487229
       // TODO: the icon class is only required when a dropdown is a button
       // useKeyOnly(icon, 'icon'),
-      (0, _lib.useKeyOnly)(labeled, 'labeled'),
-      // TODO: linkItem is required only when Menu child, add dynamically
-      // useKeyOnly(linkItem, 'link item'),
-      (0, _lib.useKeyOnly)(multiple, 'multiple'), (0, _lib.useKeyOnly)(search, 'search'), (0, _lib.useKeyOnly)(selection, 'selection'), (0, _lib.useKeyOnly)(simple, 'simple'), (0, _lib.useKeyOnly)(scrolling, 'scrolling'), (0, _lib.useKeyOrValueAndKey)(pointing, 'pointing'), className, 'dropdown');
+      (0, _lib.useKeyOnly)(labeled, 'labeled'), (0, _lib.useKeyOnly)(item, 'item'), (0, _lib.useKeyOnly)(multiple, 'multiple'), (0, _lib.useKeyOnly)(search, 'search'), (0, _lib.useKeyOnly)(selection, 'selection'), (0, _lib.useKeyOnly)(simple, 'simple'), (0, _lib.useKeyOnly)(scrolling, 'scrolling'), (0, _lib.useKeyOrValueAndKey)(pointing, 'pointing'), className, 'dropdown');
       var rest = (0, _lib.getUnhandledProps)(Dropdown, this.props);
       var ElementType = (0, _lib.getElementType)(Dropdown, this.props);
       var ariaOptions = this.getDropdownAriaOptions(ElementType, this.props);
@@ -72639,6 +72676,13 @@ process.env.NODE_ENV !== "production" ? Dropdown.propTypes = {
   /** Whether or not the menu should close when the dropdown is blurred. */
   closeOnBlur: _react.PropTypes.bool,
 
+  /**
+   * Whether or not the menu should close when a value is selected from the dropdown.
+   * By default, multiple selection dropdowns will remain open on change, while single
+   * selection dropdowns will close on change.
+   */
+  closeOnChange: _react.PropTypes.bool,
+
   /** A compact dropdown has no minimum width. */
   compact: _react.PropTypes.bool,
 
@@ -72675,7 +72719,8 @@ process.env.NODE_ENV !== "production" ? Dropdown.propTypes = {
   /** A dropdown can be labeled. */
   labeled: _react.PropTypes.bool,
 
-  // linkItem: PropTypes.bool,
+  /** A dropdown can be formatted as a Menu item. */
+  item: _react.PropTypes.bool,
 
   /** A dropdown can show that it is currently loading data. */
   loading: _react.PropTypes.bool,
@@ -72825,9 +72870,9 @@ process.env.NODE_ENV !== "production" ? Dropdown.propTypes = {
   /** Current value or value array if multiple. Creates a controlled component. */
   value: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number, _react.PropTypes.arrayOf(_react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number]))])
 } : void 0;
-Dropdown.handledProps = ['additionLabel', 'additionPosition', 'allowAdditions', 'as', 'basic', 'button', 'children', 'className', 'closeOnBlur', 'compact', 'defaultOpen', 'defaultSelectedLabel', 'defaultValue', 'disabled', 'error', 'floating', 'fluid', 'header', 'icon', 'inline', 'labeled', 'loading', 'multiple', 'name', 'noResultsMessage', 'onAddItem', 'onBlur', 'onChange', 'onClick', 'onClose', 'onFocus', 'onLabelClick', 'onMouseDown', 'onOpen', 'onSearchChange', 'open', 'openOnFocus', 'options', 'placeholder', 'pointing', 'renderLabel', 'scrolling', 'search', 'selectOnBlur', 'selectedLabel', 'selection', 'simple', 'tabIndex', 'text', 'trigger', 'value'];
+Dropdown.handledProps = ['additionLabel', 'additionPosition', 'allowAdditions', 'as', 'basic', 'button', 'children', 'className', 'closeOnBlur', 'closeOnChange', 'compact', 'defaultOpen', 'defaultSelectedLabel', 'defaultValue', 'disabled', 'error', 'floating', 'fluid', 'header', 'icon', 'inline', 'item', 'labeled', 'loading', 'multiple', 'name', 'noResultsMessage', 'onAddItem', 'onBlur', 'onChange', 'onClick', 'onClose', 'onFocus', 'onLabelClick', 'onMouseDown', 'onOpen', 'onSearchChange', 'open', 'openOnFocus', 'options', 'placeholder', 'pointing', 'renderLabel', 'scrolling', 'search', 'selectOnBlur', 'selectedLabel', 'selection', 'simple', 'tabIndex', 'text', 'trigger', 'value'];
 }).call(this,require('_process'))
-},{"../../elements/Icon":1060,"../../elements/Label":1069,"../../lib":1105,"./DropdownDivider":1120,"./DropdownHeader":1121,"./DropdownItem":1122,"./DropdownMenu":1123,"_process":797,"babel-runtime/helpers/classCallCheck":11,"babel-runtime/helpers/createClass":12,"babel-runtime/helpers/extends":14,"babel-runtime/helpers/get":15,"babel-runtime/helpers/inherits":16,"babel-runtime/helpers/possibleConstructorReturn":18,"classnames":22,"lodash/compact":689,"lodash/dropRight":694,"lodash/escapeRegExp":697,"lodash/every":698,"lodash/filter":699,"lodash/find":700,"lodash/findIndex":701,"lodash/get":731,"lodash/has":732,"lodash/includes":736,"lodash/isEmpty":744,"lodash/isEqual":745,"lodash/isFunction":746,"lodash/isNil":748,"lodash/map":761,"lodash/reduce":771,"lodash/some":773,"lodash/union":788,"lodash/without":791,"react":966}],1120:[function(require,module,exports){
+},{"../../elements/Icon":1060,"../../elements/Label":1069,"../../lib":1105,"./DropdownDivider":1120,"./DropdownHeader":1121,"./DropdownItem":1122,"./DropdownMenu":1123,"_process":797,"babel-runtime/helpers/classCallCheck":11,"babel-runtime/helpers/createClass":12,"babel-runtime/helpers/extends":14,"babel-runtime/helpers/get":15,"babel-runtime/helpers/inherits":16,"babel-runtime/helpers/possibleConstructorReturn":18,"classnames":22,"lodash/compact":689,"lodash/dropRight":694,"lodash/escapeRegExp":697,"lodash/every":698,"lodash/filter":699,"lodash/find":700,"lodash/findIndex":701,"lodash/get":731,"lodash/has":732,"lodash/includes":736,"lodash/isEmpty":744,"lodash/isEqual":745,"lodash/isFunction":746,"lodash/isNil":748,"lodash/isUndefined":756,"lodash/map":761,"lodash/reduce":771,"lodash/some":773,"lodash/union":788,"lodash/without":791,"react":966}],1120:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -73310,19 +73355,9 @@ var _Icon2 = _interopRequireDefault(_Icon);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _meta = {
-  name: 'Embed',
-  type: _lib.META.TYPES.MODULE,
-  props: {
-    aspectRatio: ['4:3', '16:9', '21:9'],
-    source: ['youtube', 'vimeo']
-  }
-};
-
 /**
  * An embed displays content from other websites like YouTube videos or Google Maps.
  */
-
 var Embed = function (_Component) {
   (0, _inherits3.default)(Embed, _Component);
 
@@ -73432,7 +73467,10 @@ Embed.autoControlledProps = ['active'];
 Embed.defaultProps = {
   icon: 'video play'
 };
-Embed._meta = _meta;
+Embed._meta = {
+  name: 'Embed',
+  type: _lib.META.TYPES.MODULE
+};
 exports.default = Embed;
 process.env.NODE_ENV !== "production" ? Embed.propTypes = {
   /** An element type to render as (string or function). */
@@ -73441,11 +73479,11 @@ process.env.NODE_ENV !== "production" ? Embed.propTypes = {
   /** An embed can be active. */
   active: _react.PropTypes.bool,
 
+  /** An embed can specify an alternative aspect ratio. */
+  aspectRatio: _react.PropTypes.oneOf(['4:3', '16:9', '21:9']),
+
   /** Setting to true or false will force autoplay. */
   autoplay: _lib.customPropTypes.every([_lib.customPropTypes.demand(['source']), _react.PropTypes.bool]),
-
-  /** An embed can specify an alternative aspect ratio. */
-  aspectRatio: _react.PropTypes.oneOf(_meta.props.aspectRatio),
 
   /** Whether to show networks branded UI like title cards, or after video calls to action. */
   brandedUI: _lib.customPropTypes.every([_lib.customPropTypes.demand(['source']), _react.PropTypes.bool]),
@@ -73465,11 +73503,11 @@ process.env.NODE_ENV !== "production" ? Embed.propTypes = {
   /** Whether to show networks branded UI like title cards, or after video calls to action. */
   hd: _lib.customPropTypes.every([_lib.customPropTypes.demand(['source']), _react.PropTypes.bool]),
 
-  /** Specifies an id for source. */
-  id: _lib.customPropTypes.every([_lib.customPropTypes.demand(['source']), _react.PropTypes.string]),
-
   /** Specifies an icon to use with placeholder content. */
   icon: _lib.customPropTypes.itemShorthand,
+
+  /** Specifies an id for source. */
+  id: _lib.customPropTypes.every([_lib.customPropTypes.demand(['source']), _react.PropTypes.string]),
 
   /**
    * Сalled on click.
@@ -73483,7 +73521,7 @@ process.env.NODE_ENV !== "production" ? Embed.propTypes = {
   placeholder: _react.PropTypes.string,
 
   /** Specifies a source to use. */
-  source: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['sourceUrl']), _react.PropTypes.oneOf(_meta.props.source)]),
+  source: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['sourceUrl']), _react.PropTypes.oneOf(['youtube', 'vimeo'])]),
 
   /** Specifies a url to use for embed. */
   url: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['source']), _react.PropTypes.string])
@@ -73608,7 +73646,9 @@ var Modal = function (_Component) {
       args[_key] = arguments[_key];
     }
 
-    return _ret = (_temp = (_this = (0, _possibleConstructorReturn3.default)(this, (_ref = Modal.__proto__ || Object.getPrototypeOf(Modal)).call.apply(_ref, [this].concat(args))), _this), _this.state = {}, _this.handleClose = function (e) {
+    return _ret = (_temp = (_this = (0, _possibleConstructorReturn3.default)(this, (_ref = Modal.__proto__ || Object.getPrototypeOf(Modal)).call.apply(_ref, [this].concat(args))), _this), _this.state = {}, _this.getMountNode = function () {
+      return _lib.isBrowser ? _this.props.mountNode || document.body : null;
+    }, _this.handleClose = function (e) {
       debug('close()');
 
       var onClose = _this.props.onClose;
@@ -73626,10 +73666,9 @@ var Modal = function (_Component) {
       _this.trySetState({ open: true });
     }, _this.handlePortalMount = function (e) {
       debug('handlePortalMount()');
-      var _this$props = _this.props,
-          dimmer = _this$props.dimmer,
-          mountNode = _this$props.mountNode;
+      var dimmer = _this.props.dimmer;
 
+      var mountNode = _this.getMountNode();
 
       if (dimmer) {
         debug('adding dimmer');
@@ -73652,8 +73691,7 @@ var Modal = function (_Component) {
       // Always remove all dimmer classes.
       // If the dimmer value changes while the modal is open, then removing its
       // current value could leave cruft classes previously added.
-      var mountNode = _this.props.mountNode;
-
+      var mountNode = _this.getMountNode();
       mountNode.classList.remove('blurring', 'dimmable', 'dimmed', 'scrollable');
 
       cancelAnimationFrame(_this.animationRequestId);
@@ -73663,7 +73701,7 @@ var Modal = function (_Component) {
       if (onUnmount) onUnmount(e, _this.props);
     }, _this.setPosition = function () {
       if (_this._modalNode) {
-        var mountNode = _this.props.mountNode;
+        var mountNode = _this.getMountNode();
 
         var _this$_modalNode$getB = _this._modalNode.getBoundingClientRect(),
             height = _this$_modalNode$getB.height;
@@ -73700,6 +73738,9 @@ var Modal = function (_Component) {
       debug('componentWillUnmount()');
       this.handlePortalUnmount();
     }
+
+    // Do not access document when server side rendering
+
   }, {
     key: 'render',
     value: function render() {
@@ -73711,12 +73752,15 @@ var Modal = function (_Component) {
           children = _props.children,
           className = _props.className,
           closeIcon = _props.closeIcon,
+          closeOnDimmerClick = _props.closeOnDimmerClick,
+          closeOnDocumentClick = _props.closeOnDocumentClick,
           dimmer = _props.dimmer,
-          mountNode = _props.mountNode,
           size = _props.size;
 
-      // Short circuit when server side rendering
 
+      var mountNode = this.getMountNode();
+
+      // Short circuit when server side rendering
       if (!_lib.isBrowser) return null;
 
       var _state = this.state,
@@ -73759,8 +73803,8 @@ var Modal = function (_Component) {
       return _react2.default.createElement(
         _Portal2.default,
         (0, _extends3.default)({
-          closeOnRootNodeClick: true,
-          closeOnDocumentClick: false
+          closeOnRootNodeClick: closeOnDimmerClick,
+          closeOnDocumentClick: closeOnDocumentClick
         }, portalProps, {
           className: dimmerClasses,
           mountNode: mountNode,
@@ -73779,8 +73823,8 @@ var Modal = function (_Component) {
 
 Modal.defaultProps = {
   dimmer: true,
-  // Do not access document when server side rendering
-  mountNode: _lib.isBrowser ? document.body : null
+  closeOnDimmerClick: true,
+  closeOnDocumentClick: false
 };
 Modal.autoControlledProps = ['open'];
 Modal._meta = _meta;
@@ -73792,6 +73836,9 @@ process.env.NODE_ENV !== "production" ? Modal.propTypes = {
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
 
+  /** A modal can reduce its complexity */
+  basic: _react.PropTypes.bool,
+
   /** Primary content. */
   children: _react.PropTypes.node,
 
@@ -73801,8 +73848,13 @@ process.env.NODE_ENV !== "production" ? Modal.propTypes = {
   /** Icon */
   closeIcon: _react.PropTypes.oneOfType([_react.PropTypes.node, _react.PropTypes.object, _react.PropTypes.bool]),
 
-  /** A modal can reduce its complexity */
-  basic: _react.PropTypes.bool,
+  /**
+   * Whether or not the Modal should close when the dimmer is clicked.
+   */
+  closeOnDimmerClick: _react.PropTypes.bool,
+
+  /** Whether or not the Modal should close when the document is clicked. */
+  closeOnDocumentClick: _react.PropTypes.bool,
 
   /** Initial value of open. */
   defaultOpen: _react.PropTypes.bool,
@@ -73810,7 +73862,7 @@ process.env.NODE_ENV !== "production" ? Modal.propTypes = {
   /** A modal can appear in a dimmer */
   dimmer: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(_meta.props.dimmer)]),
 
-  /** The node where the modal should mount.. */
+  /** The node where the modal should mount.  Defaults to document.body. */
   mountNode: _react.PropTypes.any,
 
   /**
@@ -73852,7 +73904,7 @@ process.env.NODE_ENV !== "production" ? Modal.propTypes = {
   size: _react.PropTypes.oneOf(_meta.props.size)
 
 } : void 0;
-Modal.handledProps = ['as', 'basic', 'children', 'className', 'closeIcon', 'defaultOpen', 'dimmer', 'mountNode', 'onClose', 'onMount', 'onOpen', 'onUnmount', 'open', 'size'];
+Modal.handledProps = ['as', 'basic', 'children', 'className', 'closeIcon', 'closeOnDimmerClick', 'closeOnDocumentClick', 'defaultOpen', 'dimmer', 'mountNode', 'onClose', 'onMount', 'onOpen', 'onUnmount', 'open', 'size'];
 exports.default = Modal;
 }).call(this,require('_process'))
 },{"../../addons/Portal":998,"../../elements/Icon":1060,"../../lib":1105,"./ModalActions":1128,"./ModalContent":1129,"./ModalDescription":1130,"./ModalHeader":1131,"_process":797,"babel-runtime/helpers/classCallCheck":11,"babel-runtime/helpers/createClass":12,"babel-runtime/helpers/extends":14,"babel-runtime/helpers/inherits":16,"babel-runtime/helpers/possibleConstructorReturn":18,"classnames":22,"lodash/omit":766,"lodash/pick":768,"react":966}],1128:[function(require,module,exports){
@@ -74717,9 +74769,25 @@ var _extends2 = require('babel-runtime/helpers/extends');
 
 var _extends3 = _interopRequireDefault(_extends2);
 
-var _without2 = require('lodash/without');
+var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
 
-var _without3 = _interopRequireDefault(_without2);
+var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+var _createClass2 = require('babel-runtime/helpers/createClass');
+
+var _createClass3 = _interopRequireDefault(_createClass2);
+
+var _possibleConstructorReturn2 = require('babel-runtime/helpers/possibleConstructorReturn');
+
+var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
+
+var _inherits2 = require('babel-runtime/helpers/inherits');
+
+var _inherits3 = _interopRequireDefault(_inherits2);
+
+var _every2 = require('lodash/every');
+
+var _every3 = _interopRequireDefault(_every2);
 
 var _round2 = require('lodash/round');
 
@@ -74729,13 +74797,13 @@ var _clamp2 = require('lodash/clamp');
 
 var _clamp3 = _interopRequireDefault(_clamp2);
 
-var _every2 = require('lodash/every');
-
-var _every3 = _interopRequireDefault(_every2);
-
 var _isUndefined2 = require('lodash/isUndefined');
 
 var _isUndefined3 = _interopRequireDefault(_isUndefined2);
+
+var _without2 = require('lodash/without');
+
+var _without3 = _interopRequireDefault(_without2);
 
 var _classnames = require('classnames');
 
@@ -74749,88 +74817,116 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function Progress(props) {
-  var active = props.active,
-      attached = props.attached,
-      autoSuccess = props.autoSuccess,
-      color = props.color,
-      children = props.children,
-      className = props.className,
-      disabled = props.disabled,
-      error = props.error,
-      indicating = props.indicating,
-      inverted = props.inverted,
-      label = props.label,
-      percent = props.percent,
-      precision = props.precision,
-      progress = props.progress,
-      size = props.size,
-      success = props.success,
-      total = props.total,
-      value = props.value,
-      warning = props.warning;
+/**
+ * A progress bar shows the progression of a task.
+ */
+var Progress = function (_Component) {
+  (0, _inherits3.default)(Progress, _Component);
+
+  function Progress() {
+    var _ref;
+
+    var _temp, _this, _ret;
+
+    (0, _classCallCheck3.default)(this, Progress);
+
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return _ret = (_temp = (_this = (0, _possibleConstructorReturn3.default)(this, (_ref = Progress.__proto__ || Object.getPrototypeOf(Progress)).call.apply(_ref, [this].concat(args))), _this), _this.calculatePercent = function () {
+      var _this$props = _this.props,
+          percent = _this$props.percent,
+          total = _this$props.total,
+          value = _this$props.value;
 
 
-  var isAutoSuccess = autoSuccess && (percent >= 100 || value >= total);
+      if (!(0, _isUndefined3.default)(percent)) return percent;
+      if (!(0, _isUndefined3.default)(total) && !(0, _isUndefined3.default)(value)) return value / total * 100;
+    }, _this.getPercent = function () {
+      var precision = _this.props.precision;
 
-  var showProgress = progress || label || !(0, _isUndefined3.default)(precision) || !(0, _every3.default)([total, value], _isUndefined3.default);
+      var percent = (0, _clamp3.default)(_this.calculatePercent(), 0, 100);
 
-  var _percent = void 0;
-  if (!(0, _isUndefined3.default)(percent)) {
-    _percent = percent;
-  } else if (!(0, _isUndefined3.default)(total) && !(0, _isUndefined3.default)(value)) {
-    _percent = value / total * 100;
+      if ((0, _isUndefined3.default)(precision)) return percent;
+      return (0, _round3.default)(percent, precision);
+    }, _this.isAutoSuccess = function () {
+      var _this$props2 = _this.props,
+          autoSuccess = _this$props2.autoSuccess,
+          percent = _this$props2.percent,
+          total = _this$props2.total,
+          value = _this$props2.value;
+
+
+      return autoSuccess && (percent >= 100 || value >= total);
+    }, _this.showProgress = function () {
+      var _this$props3 = _this.props,
+          label = _this$props3.label,
+          precision = _this$props3.precision,
+          progress = _this$props3.progress,
+          total = _this$props3.total,
+          value = _this$props3.value;
+
+
+      if (label || progress || !(0, _isUndefined3.default)(precision)) return true;
+      return !(0, _every3.default)([total, value], _isUndefined3.default);
+    }, _temp), (0, _possibleConstructorReturn3.default)(_this, _ret);
   }
 
-  _percent = (0, _clamp3.default)(_percent, 0, 100);
+  (0, _createClass3.default)(Progress, [{
+    key: 'render',
+    value: function render() {
+      var _props = this.props,
+          active = _props.active,
+          attached = _props.attached,
+          children = _props.children,
+          className = _props.className,
+          color = _props.color,
+          disabled = _props.disabled,
+          error = _props.error,
+          indicating = _props.indicating,
+          inverted = _props.inverted,
+          label = _props.label,
+          size = _props.size,
+          success = _props.success,
+          total = _props.total,
+          value = _props.value,
+          warning = _props.warning;
 
-  if (!(0, _isUndefined3.default)(precision)) {
-    _percent = (0, _round3.default)(_percent, precision);
-  }
 
-  var progressText = void 0;
-  if (label === 'percent' || label === true || (0, _isUndefined3.default)(label)) {
-    progressText = _percent + '%';
-  } else if (label === 'ratio') {
-    progressText = value + '/' + total;
-  }
+      var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useKeyOnly)(active || indicating, 'active'), (0, _lib.useKeyOnly)(disabled, 'disabled'), (0, _lib.useKeyOnly)(error, 'error'), (0, _lib.useKeyOnly)(indicating, 'indicating'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useKeyOnly)(success || this.isAutoSuccess(), 'success'), (0, _lib.useKeyOnly)(warning, 'warning'), (0, _lib.useValueAndKey)(attached, 'attached'), 'progress', className);
+      var rest = (0, _lib.getUnhandledProps)(Progress, this.props);
+      var ElementType = (0, _lib.getElementType)(Progress, this.props);
 
-  var classes = (0, _classnames2.default)('ui', size, color, (0, _lib.useKeyOnly)(active || indicating, 'active'), (0, _lib.useKeyOnly)(isAutoSuccess || success, 'success'), (0, _lib.useKeyOnly)(warning, 'warning'), (0, _lib.useKeyOnly)(error, 'error'), (0, _lib.useKeyOnly)(disabled, 'disabled'), (0, _lib.useKeyOnly)(indicating, 'indicating'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useValueAndKey)(attached, 'attached'), className, 'progress');
-  var rest = (0, _lib.getUnhandledProps)(Progress, props);
-  var ElementType = (0, _lib.getElementType)(Progress, props);
+      var percent = this.getPercent();
 
-  return _react2.default.createElement(
-    ElementType,
-    (0, _extends3.default)({}, rest, { className: classes }),
-    _react2.default.createElement(
-      'div',
-      { className: 'bar', style: { width: _percent + '%' } },
-      showProgress && _react2.default.createElement(
-        'div',
-        { className: 'progress' },
-        progressText
-      )
-    ),
-    children && _react2.default.createElement(
-      'div',
-      { className: 'label' },
-      children
-    )
-  );
-}
+      return _react2.default.createElement(
+        ElementType,
+        (0, _extends3.default)({}, rest, { className: classes }),
+        _react2.default.createElement(
+          'div',
+          { className: 'bar', style: { width: percent + '%' } },
+          this.showProgress() && _react2.default.createElement(
+            'div',
+            { className: 'progress' },
+            label !== 'ratio' ? percent + '%' : value + '/' + total
+          )
+        ),
+        children && _react2.default.createElement(
+          'div',
+          { className: 'label' },
+          children
+        )
+      );
+    }
+  }]);
+  return Progress;
+}(_react.Component);
 
-Progress.handledProps = ['active', 'as', 'attached', 'autoSuccess', 'children', 'className', 'color', 'disabled', 'error', 'indicating', 'inverted', 'label', 'percent', 'precision', 'progress', 'size', 'success', 'total', 'value', 'warning'];
 Progress._meta = {
   name: 'Progress',
-  type: _lib.META.TYPES.MODULE,
-  props: {
-    attached: ['top', 'bottom'],
-    color: _lib.SUI.COLORS,
-    label: ['ratio', 'percent'],
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'mini', 'huge', 'massive')
-  }
+  type: _lib.META.TYPES.MODULE
 };
-
 process.env.NODE_ENV !== "production" ? Progress.propTypes = {
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
@@ -74839,19 +74935,19 @@ process.env.NODE_ENV !== "production" ? Progress.propTypes = {
   active: _react.PropTypes.bool,
 
   /** A progress bar can attach to and show the progress of an element (i.e. Card or Segment). */
-  attached: _react.PropTypes.oneOf(Progress._meta.props.attached),
+  attached: _react.PropTypes.oneOf(['top', 'bottom']),
 
   /** Whether success state should automatically trigger when progress completes. */
   autoSuccess: _react.PropTypes.bool,
-
-  /** A progress bar can have different colors. */
-  color: _react.PropTypes.oneOf(Progress._meta.props.color),
 
   /** Primary content. */
   children: _react.PropTypes.node,
 
   /** Additional classes. */
   className: _react.PropTypes.string,
+
+  /** A progress bar can have different colors. */
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** A progress bar be disabled. */
   disabled: _react.PropTypes.bool,
@@ -74866,19 +74962,19 @@ process.env.NODE_ENV !== "production" ? Progress.propTypes = {
   inverted: _react.PropTypes.bool,
 
   /** Can be set to either to display progress as percent or ratio. */
-  label: _lib.customPropTypes.every([_lib.customPropTypes.some([_lib.customPropTypes.demand(['percent']), _lib.customPropTypes.demand(['total', 'value'])]), _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(Progress._meta.props.label)])]),
+  label: _lib.customPropTypes.every([_lib.customPropTypes.some([_lib.customPropTypes.demand(['percent']), _lib.customPropTypes.demand(['total', 'value'])]), _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['ratio', 'percent'])])]),
 
   /** Current percent complete. */
-  percent: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['total', 'value']), _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number])]),
-
-  /** A progress bar can contain a text value indicating current progress. */
-  progress: _react.PropTypes.bool,
+  percent: _lib.customPropTypes.every([_lib.customPropTypes.disallow(['total', 'value']), _react.PropTypes.oneOfType([_react.PropTypes.number, _react.PropTypes.string])]),
 
   /** Decimal point precision for calculated progress. */
   precision: _react.PropTypes.number,
 
+  /** A progress bar can contain a text value indicating current progress. */
+  progress: _react.PropTypes.bool,
+
   /** A progress bar can vary in size. */
-  size: _react.PropTypes.oneOf(Progress._meta.props.size),
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'mini', 'huge', 'massive')),
 
   /** A progress bar can show a success state. */
   success: _react.PropTypes.bool,
@@ -74888,20 +74984,20 @@ process.env.NODE_ENV !== "production" ? Progress.propTypes = {
    * Together, these will calculate the percent.
    * Mutually excludes percent.
    */
-  total: _lib.customPropTypes.every([_lib.customPropTypes.demand(['value']), _lib.customPropTypes.disallow(['percent']), _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number])]),
+  total: _lib.customPropTypes.every([_lib.customPropTypes.demand(['value']), _lib.customPropTypes.disallow(['percent']), _react.PropTypes.oneOfType([_react.PropTypes.number, _react.PropTypes.string])]),
 
   /**
    * For use with total. Together, these will calculate the percent. Mutually excludes percent.
    */
-  value: _lib.customPropTypes.every([_lib.customPropTypes.demand(['total']), _lib.customPropTypes.disallow(['percent']), _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number])]),
+  value: _lib.customPropTypes.every([_lib.customPropTypes.demand(['total']), _lib.customPropTypes.disallow(['percent']), _react.PropTypes.oneOfType([_react.PropTypes.number, _react.PropTypes.string])]),
 
   /** A progress bar can show a warning state. */
   warning: _react.PropTypes.bool
 } : void 0;
-
+Progress.handledProps = ['active', 'as', 'attached', 'autoSuccess', 'children', 'className', 'color', 'disabled', 'error', 'indicating', 'inverted', 'label', 'percent', 'precision', 'progress', 'size', 'success', 'total', 'value', 'warning'];
 exports.default = Progress;
 }).call(this,require('_process'))
-},{"../../lib":1105,"_process":797,"babel-runtime/helpers/extends":14,"classnames":22,"lodash/clamp":687,"lodash/every":698,"lodash/isUndefined":756,"lodash/round":772,"lodash/without":791,"react":966}],1138:[function(require,module,exports){
+},{"../../lib":1105,"_process":797,"babel-runtime/helpers/classCallCheck":11,"babel-runtime/helpers/createClass":12,"babel-runtime/helpers/extends":14,"babel-runtime/helpers/inherits":16,"babel-runtime/helpers/possibleConstructorReturn":18,"classnames":22,"lodash/clamp":687,"lodash/every":698,"lodash/isUndefined":756,"lodash/round":772,"lodash/without":791,"react":966}],1138:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -74972,20 +75068,9 @@ var _RatingIcon2 = _interopRequireDefault(_RatingIcon);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _meta = {
-  name: 'Rating',
-  type: _lib.META.TYPES.MODULE,
-  props: {
-    clearable: ['auto'],
-    icon: ['star', 'heart'],
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'medium', 'big')
-  }
-};
-
 /**
- * A rating indicates user interest in content
+ * A rating indicates user interest in content.
  */
-
 var Rating = function (_Component) {
   (0, _inherits3.default)(Rating, _Component);
 
@@ -75030,11 +75115,11 @@ var Rating = function (_Component) {
         (0, _times3.default)(maxRating, function (i) {
           return _react2.default.createElement(_RatingIcon2.default, {
             active: rating >= i + 1,
-            index: i,
-            key: i,
             'aria-checked': rating === i + 1,
             'aria-posinset': i + 1,
             'aria-setsize': maxRating,
+            index: i,
+            key: i,
             onClick: _this2.handleIconClick,
             onMouseEnter: _this2.handleIconMouseEnter,
             selected: selectedIndex >= i && isSelecting
@@ -75051,7 +75136,10 @@ Rating.defaultProps = {
   clearable: 'auto',
   maxRating: 1
 };
-Rating._meta = _meta;
+Rating._meta = {
+  name: 'Rating',
+  type: _lib.META.TYPES.MODULE
+};
 Rating.Icon = _RatingIcon2.default;
 
 var _initialiseProps = function _initialiseProps() {
@@ -75117,19 +75205,19 @@ process.env.NODE_ENV !== "production" ? Rating.propTypes = {
    * By default a rating will be only clearable if there is 1 icon.
    * Setting to `true`/`false` will allow or disallow a user to clear their rating.
    */
-  clearable: _react.PropTypes.oneOfType([_react.PropTypes.oneOf(_meta.props.clearable), _react.PropTypes.bool]),
+  clearable: _react.PropTypes.oneOfType([_react.PropTypes.bool, _react.PropTypes.oneOf(['auto'])]),
 
   /** The initial rating value. */
-  defaultRating: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number]),
+  defaultRating: _react.PropTypes.oneOfType([_react.PropTypes.number, _react.PropTypes.string]),
 
   /** You can disable or enable interactive rating.  Makes a read-only rating. */
   disabled: _react.PropTypes.bool,
 
   /** A rating can use a set of star or heart icons. */
-  icon: _react.PropTypes.oneOf(_meta.props.icon),
+  icon: _react.PropTypes.oneOf(['star', 'heart']),
 
   /** The total number of icons. */
-  maxRating: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number]),
+  maxRating: _react.PropTypes.oneOfType([_react.PropTypes.number, _react.PropTypes.string]),
 
   /**
    * Called after user selects a new rating.
@@ -75140,10 +75228,10 @@ process.env.NODE_ENV !== "production" ? Rating.propTypes = {
   onRate: _react.PropTypes.func,
 
   /** The current number of active icons. */
-  rating: _react.PropTypes.oneOfType([_react.PropTypes.string, _react.PropTypes.number]),
+  rating: _react.PropTypes.oneOfType([_react.PropTypes.number, _react.PropTypes.string]),
 
   /** A progress bar can vary in size. */
-  size: _react.PropTypes.oneOf(_meta.props.size)
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'medium', 'big'))
 } : void 0;
 Rating.handledProps = ['as', 'className', 'clearable', 'defaultRating', 'disabled', 'icon', 'maxRating', 'onRate', 'rating', 'size'];
 }).call(this,require('_process'))
@@ -75250,14 +75338,13 @@ var RatingIcon = function (_Component) {
       var rest = (0, _lib.getUnhandledProps)(RatingIcon, this.props);
       var ElementType = (0, _lib.getElementType)(RatingIcon, this.props);
 
-      return _react2.default.createElement(ElementType, (0, _extends3.default)({
-        role: 'radio',
-        tabIndex: 0
-      }, rest, {
+      return _react2.default.createElement(ElementType, (0, _extends3.default)({}, rest, {
         className: classes,
-        onKeyUp: this.handleKeyUp,
         onClick: this.handleClick,
-        onMouseEnter: this.handleMouseEnter
+        onKeyUp: this.handleKeyUp,
+        onMouseEnter: this.handleMouseEnter,
+        tabIndex: 0,
+        role: 'radio'
       }));
     }
   }]);
@@ -75271,11 +75358,11 @@ RatingIcon._meta = {
 };
 exports.default = RatingIcon;
 process.env.NODE_ENV !== "production" ? RatingIcon.propTypes = {
-  /** Indicates activity of an icon. */
-  active: _react.PropTypes.bool,
-
   /** An element type to render as (string or function). */
   as: _lib.customPropTypes.as,
+
+  /** Indicates activity of an icon. */
+  active: _react.PropTypes.bool,
 
   /** Additional classes. */
   className: _react.PropTypes.string,
@@ -79726,7 +79813,7 @@ var _StatisticValue2 = _interopRequireDefault(_StatisticValue);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * A statistic emphasizes the current value of an attribute
+ * A statistic emphasizes the current value of an attribute.
  */
 function Statistic(props) {
   var children = props.children,
@@ -79740,17 +79827,16 @@ function Statistic(props) {
       text = props.text,
       value = props.value;
 
-  var classes = (0, _classnames2.default)('ui', color, (0, _lib.useValueAndKey)(floated, 'floated'), (0, _lib.useKeyOnly)(horizontal, 'horizontal'), (0, _lib.useKeyOnly)(inverted, 'inverted'), size, className, 'statistic');
+
+  var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useValueAndKey)(floated, 'floated'), (0, _lib.useKeyOnly)(horizontal, 'horizontal'), (0, _lib.useKeyOnly)(inverted, 'inverted'), 'statistic', className);
   var rest = (0, _lib.getUnhandledProps)(Statistic, props);
   var ElementType = (0, _lib.getElementType)(Statistic, props);
 
-  if (!(0, _isNil3.default)(children)) {
-    return _react2.default.createElement(
-      ElementType,
-      (0, _extends3.default)({}, rest, { className: classes }),
-      children
-    );
-  }
+  if (!(0, _isNil3.default)(children)) return _react2.default.createElement(
+    ElementType,
+    (0, _extends3.default)({}, rest, { className: classes }),
+    children
+  );
 
   return _react2.default.createElement(
     ElementType,
@@ -79763,12 +79849,7 @@ function Statistic(props) {
 Statistic.handledProps = ['as', 'children', 'className', 'color', 'floated', 'horizontal', 'inverted', 'label', 'size', 'text', 'value'];
 Statistic._meta = {
   name: 'Statistic',
-  type: _lib.META.TYPES.VIEW,
-  props: {
-    color: _lib.SUI.COLORS,
-    floated: _lib.SUI.FLOATS,
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'big', 'massive', 'medium')
-  }
+  type: _lib.META.TYPES.VIEW
 };
 
 process.env.NODE_ENV !== "production" ? Statistic.propTypes = {
@@ -79782,10 +79863,10 @@ process.env.NODE_ENV !== "production" ? Statistic.propTypes = {
   className: _react.PropTypes.string,
 
   /** A statistic can be formatted to be different colors. */
-  color: _react.PropTypes.oneOf(Statistic._meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** A statistic can sit to the left or right of other content. */
-  floated: _react.PropTypes.oneOf(Statistic._meta.props.floated),
+  floated: _react.PropTypes.oneOf(_lib.SUI.FLOATS),
 
   /** A statistic can present its measurement horizontally. */
   horizontal: _react.PropTypes.bool,
@@ -79797,7 +79878,7 @@ process.env.NODE_ENV !== "production" ? Statistic.propTypes = {
   label: _lib.customPropTypes.contentShorthand,
 
   /** A statistic can vary in size. */
-  size: _react.PropTypes.oneOf(Statistic._meta.props.size),
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'big', 'massive', 'medium')),
 
   /** Format the StatisticValue with smaller font size to fit nicely beside number values. */
   text: _react.PropTypes.bool,
@@ -79852,6 +79933,9 @@ var _Statistic2 = _interopRequireDefault(_Statistic);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A group of statistics.
+ */
 function StatisticGroup(props) {
   var children = props.children,
       className = props.className,
@@ -79862,17 +79946,16 @@ function StatisticGroup(props) {
       size = props.size,
       widths = props.widths;
 
-  var classes = (0, _classnames2.default)('ui', color, (0, _lib.useKeyOnly)(horizontal, 'horizontal'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useWidthProp)(widths), size, 'statistics', className);
+
+  var classes = (0, _classnames2.default)('ui', color, size, (0, _lib.useKeyOnly)(horizontal, 'horizontal'), (0, _lib.useKeyOnly)(inverted, 'inverted'), (0, _lib.useWidthProp)(widths), 'statistics', className);
   var rest = (0, _lib.getUnhandledProps)(StatisticGroup, props);
   var ElementType = (0, _lib.getElementType)(StatisticGroup, props);
 
-  if (!(0, _isNil3.default)(children)) {
-    return _react2.default.createElement(
-      ElementType,
-      (0, _extends3.default)({}, rest, { className: classes }),
-      children
-    );
-  }
+  if (!(0, _isNil3.default)(children)) return _react2.default.createElement(
+    ElementType,
+    (0, _extends3.default)({}, rest, { className: classes }),
+    children
+  );
 
   var itemsJSX = (0, _map3.default)(items, function (item) {
     return _react2.default.createElement(_Statistic2.default, (0, _extends3.default)({ key: item.childKey || [item.label, item.title].join('-') }, item));
@@ -79889,12 +79972,7 @@ StatisticGroup.handledProps = ['as', 'children', 'className', 'color', 'horizont
 StatisticGroup._meta = {
   name: 'StatisticGroup',
   type: _lib.META.TYPES.VIEW,
-  parent: 'Statistic',
-  props: {
-    color: _lib.SUI.COLORS,
-    size: (0, _without3.default)(_lib.SUI.SIZES, 'big', 'massive', 'medium'),
-    widths: _lib.SUI.WIDTHS
-  }
+  parent: 'Statistic'
 };
 
 process.env.NODE_ENV !== "production" ? StatisticGroup.propTypes = {
@@ -79908,7 +79986,7 @@ process.env.NODE_ENV !== "production" ? StatisticGroup.propTypes = {
   className: _react.PropTypes.string,
 
   /** A statistic group can be formatted to be different colors. */
-  color: _react.PropTypes.oneOf(StatisticGroup._meta.props.color),
+  color: _react.PropTypes.oneOf(_lib.SUI.COLORS),
 
   /** A statistic group can present its measurement horizontally. */
   horizontal: _react.PropTypes.bool,
@@ -79920,10 +79998,10 @@ process.env.NODE_ENV !== "production" ? StatisticGroup.propTypes = {
   items: _lib.customPropTypes.collectionShorthand,
 
   /** A statistic group can vary in size. */
-  size: _react.PropTypes.oneOf(StatisticGroup._meta.props.size),
+  size: _react.PropTypes.oneOf((0, _without3.default)(_lib.SUI.SIZES, 'big', 'massive', 'medium')),
 
   /** A statistic group can have its items divided evenly. */
-  widths: _react.PropTypes.oneOf(StatisticGroup._meta.props.widths)
+  widths: _react.PropTypes.oneOf(_lib.SUI.WIDTHS)
 } : void 0;
 
 exports.default = StatisticGroup;
@@ -79956,12 +80034,15 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A statistic can contain a label to help provide context for the presented value.
+ */
 function StatisticLabel(props) {
   var children = props.children,
       className = props.className,
       label = props.label;
 
-  var classes = (0, _classnames2.default)(className, 'label');
+  var classes = (0, _classnames2.default)('label', className);
   var rest = (0, _lib.getUnhandledProps)(StatisticLabel, props);
   var ElementType = (0, _lib.getElementType)(StatisticLabel, props);
 
@@ -80023,13 +80104,17 @@ var _lib = require('../../lib');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/**
+ * A statistic can contain a numeric, icon, image, or text value.
+ */
 function StatisticValue(props) {
   var children = props.children,
       className = props.className,
       text = props.text,
       value = props.value;
 
-  var classes = (0, _classnames2.default)((0, _lib.useKeyOnly)(text, 'text'), className, 'value');
+
+  var classes = (0, _classnames2.default)((0, _lib.useKeyOnly)(text, 'text'), 'value', className);
   var rest = (0, _lib.getUnhandledProps)(StatisticValue, props);
   var ElementType = (0, _lib.getElementType)(StatisticValue, props);
 
@@ -80183,6 +80268,10 @@ var changeEditOpenedFile = function changeEditOpenedFile(input) {
 var changeEditOutputDiff = function changeEditOutputDiff(input) {
   return { type: _types2.default.EDIT_OUTPUT_DIFF_CHANGE, input: input };
 };
+// 表示するcommentsのstateを更新
+var changeEditOutputComments = function changeEditOutputComments(input) {
+  return { type: _types2.default.EDIT_OUTPUT_COMMENTS_CHANGE, input: input };
+};
 
 // oauthTokenのstageを変更
 var changeOAuthState = function changeOAuthState(input) {
@@ -80208,6 +80297,7 @@ exports.default = {
   //editer
   changeEditOpenedFile: changeEditOpenedFile,
   changeEditOutputDiff: changeEditOutputDiff,
+  changeEditOutputComments: changeEditOutputComments,
 
   //Auth
   changeOAuthState: changeOAuthState,
@@ -80225,7 +80315,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _reduxsauce = require('reduxsauce');
 
-exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n\n  OAUTH_STATE_CHANGE\n\n  MENU_VISIBLE_CHANGE\n  MENU_SHOW_FILES_CHANGE\n  MENU_SELECT_FILE_CHANGE\n  MENU_CURRENT_DIR_CHANGE\n\n  MODAL_VISIBLE_CHANGE\n\n  EDIT_OPENED_FILE_CHANGE\n  EDIT_OUTPUT_DIFF_CHANGE\n');
+exports.default = (0, _reduxsauce.createTypes)('\n  STARTUP\n\n  OAUTH_STATE_CHANGE\n\n  MENU_VISIBLE_CHANGE\n  MENU_SHOW_FILES_CHANGE\n  MENU_SELECT_FILE_CHANGE\n  MENU_CURRENT_DIR_CHANGE\n\n  MODAL_VISIBLE_CHANGE\n\n  EDIT_OPENED_FILE_CHANGE\n  EDIT_OUTPUT_DIFF_CHANGE\n  EDIT_OUTPUT_COMMENTS_CHANGE\n');
 
 },{"reduxsauce":992}],1197:[function(require,module,exports){
 'use strict';
@@ -80296,7 +80386,7 @@ var App = function (_Component) {
   _react2.default.createElement(App, null)
 ), document.getElementById('app'));
 
-},{"./actions":1195,"./container":1206,"./store/configureStore":1216,"babel-polyfill":1,"react":966,"react-dom":800,"react-redux":936}],1198:[function(require,module,exports){
+},{"./actions":1195,"./container":1206,"./store/configureStore":1217,"babel-polyfill":1,"react":966,"react-dom":800,"react-redux":936}],1198:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -80494,7 +80584,7 @@ AppSidebar.propTypes = {
   onChangeModalVisible: _react.PropTypes.func
 };
 
-},{"../lib/drive":1208,"./appLoading":1198,"./filelist":1203,"react":966,"semantic-ui-react":1094}],1200:[function(require,module,exports){
+},{"../lib/drive":1209,"./appLoading":1198,"./filelist":1203,"react":966,"semantic-ui-react":1094}],1200:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -80634,8 +80724,12 @@ var Contents = function (_Component) {
             _react2.default.createElement(_edit2.default, {
               openedFile: this.props.editOpenedFile,
               outputDiff: this.props.editOutputDiff,
+              outputComments: this.props.editOutputComments,
               onChangeOutputDiff: function onChangeOutputDiff(input) {
                 return _this2.props.onChangeEditOutputDiff(input);
+              },
+              onChangeOutputComments: function onChangeOutputComments(input) {
+                return _this2.props.onChangeEditOutputComments(input);
               }
             })
           )
@@ -80662,8 +80756,10 @@ Contents.propTypes = {
 
   editOpenedFile: _react.PropTypes.string,
   editOutputDiff: _react.PropTypes.string,
+  editOutputComments: _react.PropTypes.string,
   onChangeEditOpenedFile: _react.PropTypes.func,
   onChangeEditOutputDiff: _react.PropTypes.func,
+  onChangeEditOutputComments: _react.PropTypes.func,
 
   onChangeModalVisible: _react.PropTypes.func
 };
@@ -80681,11 +80777,17 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _semanticUiReact = require('semantic-ui-react');
+
 var _diff2html = require('diff2html');
 
 var _drive = require('../lib/drive');
 
 var _drive2 = _interopRequireDefault(_drive);
+
+var _diff2htmlUi = require('../lib/diff2html-ui');
+
+var _diff2htmlUi2 = _interopRequireDefault(_diff2htmlUi);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -80694,6 +80796,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var diff = void 0,
+    comments = void 0;
 
 var Edit = function (_Component) {
   _inherits(Edit, _Component);
@@ -80713,8 +80818,10 @@ var Edit = function (_Component) {
         if (nextProps.openedFile) {
           // 開くファイルが変更されたらされたら新規読み込み
           _drive2.default.loadRealtimeFile(nextProps.openedFile).then(function (doc) {
-            var diff = doc.getModel().getRoot().get('diff');
+            diff = doc.getModel().getRoot().get('diff');
+            comments = doc.getModel().getRoot().get('comments');
             _this2.props.onChangeOutputDiff(diff);
+            _this2.props.onChangeOutputComments(comments);
           }, function () {});
         }
       }
@@ -80723,15 +80830,82 @@ var Edit = function (_Component) {
     key: 'render',
     value: function render() {
       var output = [];
-      if (this.props.openedFile) {
-        output.push(_react2.default.createElement('div', { key: 'diff', dangerouslySetInnerHTML: { __html: this.props.outputDiff } }));
-      }
 
-      return _react2.default.createElement(
-        'div',
-        { id: 'edit' },
-        output
-      );
+      var rawDiff = this.props.outputDiff;
+      var rawJson = _diff2html.Diff2Html.getJsonFromDiff(rawDiff, {
+        inputFormat: 'diff',
+        outputFormat: 'side-by-side', //TODO オプションで変更できるように
+        //outputFormat: 'line-by-line', //TODO オプションで変更できるように
+        showFiles: true
+      });
+
+      var rawComments = this.props.outputComments;
+      var comments = rawComments.split(',');
+      //NOTE: コメント仕様
+      // (id):(fileIndex):(blockIndex):(lineIndex):(user):(コメント):(datetime),
+
+      // load comments
+      var outputComments = comments.map(function (comment) {
+        return comment.split(':');
+      });
+
+      //
+      var json = rawJson.map(function (json, fileIndex) {
+        json.blocks.map(function (block, blockIndex) {
+          //該当コメントが存在すればデータを挿入していく
+
+          return block;
+        });
+        return json;
+      });
+
+      /*
+      var diff2htmlUi = new Diff2HtmlUI({json: json});
+      if (outputFormat === 'side-by-side') {
+      $container.css({'width': '100%'});
+      } else {
+      $container.css({'width': ''});
+      }
+      */
+      if (this.props.openedFile) {
+        _diff2htmlUi2.default.draw('#edit', {
+          json: json,
+          outputFormat: 'side-by-side',
+          showFiles: true
+        });
+        _diff2htmlUi2.default.fileListCloseable('#edit', true);
+        _diff2htmlUi2.default.addCommentBtnEvent(function (target) {
+          //TODO  編集状態の登録 - 編集中の状態をrelatimeデータに追加（どのファイルのどの行かぐらいしかとれないかな？
+          _diff2htmlUi2.default.addComment(target, {
+            outputFormat: 'side-by-side'
+          });
+        });
+        _diff2htmlUi2.default.synchronisedScroll('#edit', true);
+        //Diff2HtmlUI.highlightCode('#edit');
+      }
+      /*
+          const html = Diff2Html.getPrettySideBySideHtmlFromJson(json, {
+            showFiles: true,
+          });
+      */
+      // drive realtime connection
+      /*
+        var textArea1 = document.getElementById('text_area_1');
+        var textArea2 = document.getElementById('text_area_2');
+        gapi.drive.realtime.databinding.bindString(diff, textArea1);
+        gapi.drive.realtime.databinding.bindString(comments, textArea2);
+      */
+
+      /*
+          if(this.props.openedFile) {
+            output.push(
+              <div key='diff' dangerouslySetInnerHTML={{__html: html}}>
+              </div>
+            );
+          }
+      */
+
+      return _react2.default.createElement('div', { id: 'edit' });
     }
   }]);
 
@@ -80744,10 +80918,12 @@ exports.default = Edit;
 Edit.propTypes = {
   openedFile: _react.PropTypes.string,
   outputDiff: _react.PropTypes.string,
-  onChangeOutputDiff: _react.PropTypes.func
+  outputComments: _react.PropTypes.string,
+  onChangeOutputDiff: _react.PropTypes.func,
+  onChangeOutputComments: _react.PropTypes.func
 };
 
-},{"../lib/drive":1208,"diff2html":425,"react":966}],1203:[function(require,module,exports){
+},{"../lib/diff2html-ui":1208,"../lib/drive":1209,"diff2html":425,"react":966,"semantic-ui-react":1094}],1203:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -80900,7 +81076,7 @@ FileList.propTypes = {
   getFileList: _react.PropTypes.func
 };
 
-},{"../lib/drive":1208,"react":966,"semantic-ui-react":1094}],1204:[function(require,module,exports){
+},{"../lib/drive":1209,"react":966,"semantic-ui-react":1094}],1204:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81019,11 +81195,15 @@ var Main = function (_Component) {
 
             editOpenedFile: this.props.editOpenedFile,
             editOutputDiff: this.props.editOutputDiff,
+            editOutputComments: this.props.editOutputComments,
             onChangeEditOpenedFile: function onChangeEditOpenedFile(input) {
               return _this3.props.onChangeEditOpenedFile(input);
             },
             onChangeEditOutputDiff: function onChangeEditOutputDiff(input) {
               return _this3.props.onChangeEditOutputDiff(input);
+            },
+            onChangeEditOutputComments: function onChangeEditOutputComments(input) {
+              return _this3.props.onChangeEditOutputComments(input);
             },
 
             onChangeModalVisible: function onChangeModalVisible(input) {
@@ -81082,14 +81262,16 @@ Main.propTypes = {
 
   editOpenedFile: _react.PropTypes.string,
   editOutputDiff: _react.PropTypes.string,
+  editOutputComments: _react.PropTypes.string,
   onChangeEditOpenedFile: _react.PropTypes.func,
   onChangeEditOutputDiff: _react.PropTypes.func,
+  onChangeEditOutputComments: _react.PropTypes.func,
 
   modalVisible: _react.PropTypes.bool,
   onChangeModalVisible: _react.PropTypes.func
 };
 
-},{"../lib/drive":1208,"./appLoading":1198,"./appbar":1200,"./contents":1201,"./newFileModal":1205,"react":966,"semantic-ui-react":1094}],1205:[function(require,module,exports){
+},{"../lib/drive":1209,"./appLoading":1198,"./appbar":1200,"./contents":1201,"./newFileModal":1205,"react":966,"semantic-ui-react":1094}],1205:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81190,14 +81372,15 @@ var NewFileModal = function (_Component) {
       var fileName = form.fileName.value;
       var strDiff = form.diff.value;
 
-      var diff = _diff2html.Diff2Html.getPrettyHtml(strDiff, {
-        inputFormat: 'diff',
-        outputFormat: 'side-by-side', //TODO オプションで変更できるように
-        //outputFormat: 'line-by-line', //TODO オプションで変更できるように
-        showFiles: true
-      });
-
-      _drive2.default.createFile(fileName, diff).then(function (id) {
+      /*
+          const diff = Diff2Html.getPrettyHtml(strDiff, {
+            inputFormat: 'diff',
+            outputFormat: 'side-by-side', //TODO オプションで変更できるように
+            //outputFormat: 'line-by-line', //TODO オプションで変更できるように
+            showFiles: true,
+          });
+      */
+      _drive2.default.createFile(fileName, strDiff).then(function (id) {
         _this3.props.onChangeOpenedFile(id);
         _this3.close();
       }, function (e) {
@@ -81224,7 +81407,7 @@ NewFileModal.propTypes = {
   onChangeOpenedFile: _react.PropTypes.func
 };
 
-},{"../lib/drive":1208,"diff2html":425,"react":966,"semantic-ui-react":1094}],1206:[function(require,module,exports){
+},{"../lib/drive":1209,"diff2html":425,"react":966,"semantic-ui-react":1094}],1206:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81276,12 +81459,16 @@ var Container = function Container(props) {
       },
 
       editOpenedFile: props.editOpenedFile,
+      editOutputDiff: props.editOutputDiff,
+      editOutputComments: props.editOutputComments,
       onChangeEditOpenedFile: function onChangeEditOpenedFile(input) {
         return props.changeEditOpenedFile(input);
       },
-      editOutputDiff: props.editOutputDiff,
       onChangeEditOutputDiff: function onChangeEditOutputDiff(input) {
         return props.changeEditOutputDiff(input);
+      },
+      onChangeEditOutputComments: function onChangeEditOutputComments(input) {
+        return props.changeEditOutputComments(input);
       },
 
       modalVisible: props.modalVisible,
@@ -81307,9 +81494,11 @@ Container.propTypes = {
   changeMenuCurrentDir: _react.PropTypes.func,
 
   editOpenedFile: _react.PropTypes.string,
-  outputDiff: _react.PropTypes.string,
+  editOutputDiff: _react.PropTypes.string,
+  editOutputComments: _react.PropTypes.string,
   changeEditOpenedFile: _react.PropTypes.func,
   changeEditOutputDiff: _react.PropTypes.func,
+  changeEditOutputComments: _react.PropTypes.func,
 
   modalVisible: _react.PropTypes.bool,
   changeModalVisible: _react.PropTypes.func
@@ -81327,7 +81516,7 @@ var mapStateToProps = function mapStateToProps(state) {
 
     editOpenedFile: state.edit.openedFile,
     editOutputDiff: state.edit.outputDiff,
-
+    editOutputComments: state.edit.outputComments,
     modalVisible: state.modal.visible
   };
 };
@@ -81357,6 +81546,9 @@ var mapDispatchToProps = function mapDispatchToProps(dispatch) {
     changeEditOutputDiff: function changeEditOutputDiff(input) {
       return dispatch(_actions2.default.changeEditOutputDiff(input));
     },
+    changeEditOutputComments: function changeEditOutputComments(input) {
+      return dispatch(_actions2.default.changeEditOutputComments(input));
+    },
 
     changeModalVisible: function changeModalVisible(input) {
       return dispatch(_actions2.default.changeModalVisible(input));
@@ -81379,6 +81571,299 @@ exports.clientId = clientId;
 exports.scope = scope;
 
 },{}],1208:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _diff2html = require('diff2html');
+
+var _semanticUiReact = require('semantic-ui-react');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var diffJson = null;
+var defaultTarget = 'body';
+var currentSelectionColumnId = -1;
+var commentBtn = null;
+
+var Diff2HtmlUI = function () {
+  function Diff2HtmlUI() {
+    _classCallCheck(this, Diff2HtmlUI);
+  }
+
+  _createClass(Diff2HtmlUI, [{
+    key: 'draw',
+    value: function draw(targetId, config) {
+      var cfg = config || {};
+      cfg.inputFormat = 'json';
+
+      if (cfg.diff) {
+        diffJson = _diff2html.Diff2Html.getJsonFromDiff(cfg.diff);
+      } else if (cfg.json) {
+        diffJson = cfg.json;
+      }
+
+      var $target = this._getTarget(targetId);
+      $target.html(_diff2html.Diff2Html.getPrettyHtml(diffJson, cfg));
+
+      if (cfg.synchronisedScroll) {
+        this.synchronisedScroll($target, cfg);
+      }
+    }
+  }, {
+    key: 'synchronisedScroll',
+    value: function synchronisedScroll(targetId) {
+      var $target = this._getTarget(targetId);
+      $target.find('.d2h-file-side-diff').scroll(function () {
+        var $this = $target.find('.d2h-file-side-diff');
+        $this.closest('.d2h-file-wrapper').find('.d2h-file-side-diff').scrollLeft($this.scrollLeft());
+      });
+    }
+  }, {
+    key: 'fileListCloseable',
+    value: function fileListCloseable(targetId, startVisible) {
+      var _this = this;
+
+      var $target = this._getTarget(targetId);
+      var hashTag = this._getHashTag();
+
+      if (hashTag === 'files-summary-show') this.showFileList($target);else if (hashTag === 'files-summary-hide') this.hideFileList($target);else if (startVisible) this.showFileList($target);else this.hideFileList($target);
+
+      var $showBtn = $target.find('.d2h-show');
+      var $hideBtn = $target.find('.d2h-hide');
+      $showBtn.click(function () {
+        _this.showFileList($target);
+      });
+      $hideBtn.click(function () {
+        _this.hideFileList($target);
+      });
+    }
+  }, {
+    key: 'showFileList',
+    value: function showFileList($target) {
+      var $showBtn = $target.find('.d2h-show');
+      var $hideBtn = $target.find('.d2h-hide');
+      var $fileList = $target.find('.d2h-file-list');
+      $showBtn.hide();
+      $hideBtn.show();
+      $fileList.show();
+    }
+  }, {
+    key: 'hideFileList',
+    value: function hideFileList($target) {
+      console.log($target);
+      var $showBtn = $target.find('.d2h-show');
+      var $hideBtn = $target.find('.d2h-hide');
+      var $fileList = $target.find('.d2h-file-list');
+      $hideBtn.hide();
+      $showBtn.show();
+      $fileList.hide();
+    }
+  }, {
+    key: 'highlightCode',
+    value: function highlightCode(targetId) {
+      var that = this;
+      var $target = that._getTarget(targetId);
+
+      // collect all the diff files and execute the highlight on their lines
+      var $files = $target.find('.d2h-file-wrapper');
+      $files.map(function (_i, file) {
+        var oldLinesState;
+        var newLinesState;
+        var $file = $(file);
+        var language = $file.data('lang');
+
+        // collect all the code lines and execute the highlight on them
+        var $codeLines = $file.find('.d2h-code-line-ctn');
+        $codeLines.map(function (_j, line) {
+          var $line = $(line);
+          var text = line.textContent;
+          var lineParent = line.parentNode;
+
+          var lineState;
+          if (lineParent.className.indexOf('d2h-del') !== -1) {
+            lineState = oldLinesState;
+          } else {
+            lineState = newLinesState;
+          }
+
+          var result = hljs.getLanguage(language) ? hljs.highlight(language, text, true, lineState) : hljs.highlightAuto(text);
+
+          if (lineParent.className.indexOf('d2h-del') !== -1) {
+            oldLinesState = result.top;
+          } else if (lineParent.className.indexOf('d2h-ins') !== -1) {
+            newLinesState = result.top;
+          } else {
+            oldLinesState = result.top;
+            newLinesState = result.top;
+          }
+
+          var originalStream = highlightJS.nodeStream(line);
+          if (originalStream.length) {
+            var resultNode = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+            resultNode.innerHTML = result.value;
+            result.value = highlightJS.mergeStreams(originalStream, highlightJS.nodeStream(resultNode), text);
+          }
+
+          $line.addClass('hljs');
+          $line.addClass(result.language);
+          $line.html(result.value);
+        });
+      });
+    }
+  }, {
+    key: '_getTarget',
+    value: function _getTarget(targetId) {
+      var $target = void 0;
+
+      if ((typeof targetId === 'undefined' ? 'undefined' : _typeof(targetId)) === 'object' && targetId instanceof jQuery) {
+        $target = targetId;
+      } else if (typeof targetId === 'string') {
+        $target = $(targetId);
+      } else {
+        console.error("Wrong target provided! Falling back to default value 'body'.");
+        console.log('Please provide a jQuery object or a valid DOM query string.');
+        $target = $(defaultTarget);
+      }
+
+      return $target;
+    }
+  }, {
+    key: '_getHashTag',
+    value: function _getHashTag() {
+      var docUrl = document.URL;
+      var hashTagIndex = docUrl.indexOf('#');
+
+      var hashTag = null;
+      if (hashTagIndex !== -1) {
+        hashTag = docUrl.substr(hashTagIndex + 1);
+      }
+
+      return hashTag;
+    }
+  }, {
+    key: 'addCommentBtnEvent',
+    value: function addCommentBtnEvent(callback) {
+      var _this2 = this;
+
+      var pusher = $('.pusher');
+      var that = this;
+
+      $(".pusher *").unbind();
+
+      //TODO あとでtrにクラスがついてから考える
+      pusher.mouseover(function (event) {
+        var $target = $(event.target);
+        var $line = $target.closest('tr');
+        var $number = $line.find('.d2h-code-linenumber,.d2h-code-side-linenumber');
+
+        if ($number.length) {
+          if ($number.attr('class').match(/.d2h-del/)) {
+            _this2._showCommentBtn($number, callback);
+          } else if ($number.attr('class').match(/.d2h-ins/)) {
+            _this2._showCommentBtn($number, callback);
+          } else if ($number.attr('class').match(/.d2h-cntx/)) {
+            //this._showCommentBtn($number, callback);
+          }
+        }
+      });
+      //TODO あとでtrにクラスがついてから考える
+      pusher.mouseout(function (event) {
+        var $target = $(event.target);
+        if ($target.attr('class') && !$target.attr('class').match(/d2h-code-side-line/)) {
+          return;
+        }
+
+        var $line = $target.closest('tr');
+        var $number = $line.find('.d2h-code-linenumber,.d2h-code-side-linenumber');
+
+        if ($number.length) {
+          if ($number.attr('class').match(/.d2h-del/)) {
+            _this2._hideCommentBtn($number);
+          } else if ($number.attr('class').match(/.d2h-ins/)) {
+            _this2._hideCommentBtn($number);
+          } else if ($number.attr('class').match(/.d2h-cntx/)) {
+            //this._hideCommentBtn($number);
+          }
+        }
+      });
+    }
+
+    //TODO あとでtrにクラスがついてから考える
+
+  }, {
+    key: '_showCommentBtn',
+    value: function _showCommentBtn(target, callback) {
+      var $btn = target.find('.d2h-code-comment-btn');
+      if (!$btn.length) {
+        this._hideCommentBtn();
+        commentBtn = target.append("<div class='d2h-code-comment-btn'>+</div>");
+        commentBtn.click(function (e) {
+          callback(e.target);
+        });
+      }
+    }
+
+    //TODO あとでtrにクラスがついてから考える
+
+  }, {
+    key: '_hideCommentBtn',
+    value: function _hideCommentBtn(target) {
+      /*
+      if(commentBtn) {
+        commentBtn.unbind();
+        commentBtn.remove;
+        commentBtn = null;
+      }
+      if(target) {
+        let $btn = target.find('.d2h-code-comment-btn');
+        if($btn.length) {
+          $btn.unbind();
+          $btn.remove();
+        }
+      }
+      */
+    }
+  }, {
+    key: 'addComment',
+    value: function addComment(target, config) {
+      if (!target) {
+        return;
+      }
+      var cfg = config || {};
+
+      // side-by-sideかline-by-lineかの判定
+      if (cfg.outputFormat === 'side-by-side') {
+        //delかins,cntxかで判定できる疑惑ある
+        var fileDiff = $(target.closest('.d2h-files-diff'));
+        var sideDiff = $(target.closest('.d2h-file-side-diff'));
+        var targetDiffIndex = fileDiff.children().index(sideDiff);
+        var anotherDiff = targetDiffIndex == 0 ? fileDiff.children()[1] : fileDiff.children()[0];
+
+        // add comment form
+        var tr = target.closest('tr');
+        $(tr).after('<tr><td class="d2h-comment-side-linenumber"></td><td><div class="d2h-side-edit-comment"><div class="ui clearing segment"><form class="ui form"><textarea name="comment" rows="4"></textarea></form><button class="ui green right floated button">Reply</button><button class="ui black right floated button">Cancel</button></div></div></td></tr>');
+        // add dummy form heigit
+        var rowIndex = tr.rowIndex;
+        var anotherTbody = $(anotherDiff).find('.d2h-diff-tbody');
+        $(anotherTbody.children()[rowIndex]).after('<tr><td class="d2h-comment-side-linenumber"></td><td><div class="d2h-side-edit-dummy"></div></td></tr>');
+      } else {}
+    }
+  }]);
+
+  return Diff2HtmlUI;
+}();
+
+var diff2htmlUI = new Diff2HtmlUI();
+exports.default = diff2htmlUI;
+
+},{"diff2html":425,"semantic-ui-react":1094}],1209:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81523,14 +82008,20 @@ var Drive = function () {
       var self = this;
       var promise = new Promise(function (resolve, reject) {
         try {
-          realtimeUtils.createRealtimeFile(name, function (createResponse) {
-            realtimeUtils.load(createResponse.id, function (doc) {
-              resolve(createResponse.id);
-            }, function (model) {
-              model.getRoot().set('diff', diff); //diff-html model
-              model.getRoot().set('comments', ''); //comment model
-              model.getRoot().set('editingUser', ''); //editing-user model
-              model.getRoot().set('connectUser', ''); //connection-user model
+          window.gapi.client.load('drive', 'v2', function () {
+            var insertHash = {
+              mimeType: 'application/vnd.google-apps.drive-sdk.629393106275',
+              name: name
+            };
+            window.gapi.client.drive.files.insert(insertHash).execute(function (createResponse) {
+              realtimeUtils.load(createResponse.id, function (doc) {
+                resolve(createResponse.id);
+              }, function (model) {
+                model.getRoot().set('diff', diff); //diff-html model
+                model.getRoot().set('comments', ''); //comment model
+                model.getRoot().set('editingUser', ''); //editing-user model
+                model.getRoot().set('connectUser', ''); //connection-user model
+              });
             });
           });
         } catch (e) {
@@ -81562,7 +82053,7 @@ var Drive = function () {
 var drive = new Drive();
 exports.default = drive;
 
-},{"./config":1207}],1209:[function(require,module,exports){
+},{"./config":1207}],1210:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81598,7 +82089,7 @@ var ACTION_HANDLERS = _defineProperty({}, _types2.default.OAUTH_STATE_CHANGE, ch
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1210:[function(require,module,exports){
+},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1211:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81624,7 +82115,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var INITIAL_STATE = exports.INITIAL_STATE = (0, _seamlessImmutable2.default)({
   openedFile: '',
-  outputDiff: ''
+  outputDiff: '',
+  outputComments: ''
 });
 
 var changeOpenedFile = function changeOpenedFile(state, action) {
@@ -81639,11 +82131,17 @@ var changeOutputDiff = function changeOutputDiff(state, action) {
   });
 };
 
-var ACTION_HANDLERS = (_ACTION_HANDLERS = {}, _defineProperty(_ACTION_HANDLERS, _types2.default.EDIT_OPENED_FILE_CHANGE, changeOpenedFile), _defineProperty(_ACTION_HANDLERS, _types2.default.EDIT_OUTPUT_DIFF_CHANGE, changeOutputDiff), _ACTION_HANDLERS);
+var changeOutputComments = function changeOutputComments(state, actoin) {
+  return state.merge({
+    outputComments: action.input
+  });
+};
+
+var ACTION_HANDLERS = (_ACTION_HANDLERS = {}, _defineProperty(_ACTION_HANDLERS, _types2.default.EDIT_OPENED_FILE_CHANGE, changeOpenedFile), _defineProperty(_ACTION_HANDLERS, _types2.default.EDIT_OUTPUT_DIFF_CHANGE, changeOutputDiff), _defineProperty(_ACTION_HANDLERS, _types2.default.EDIT_OUTPUT_COMMNETS_CHANGE, changeOutputComments), _ACTION_HANDLERS);
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1211:[function(require,module,exports){
+},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1212:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81679,7 +82177,7 @@ var rootReducer = (0, _redux.combineReducers)({
 
 exports.default = rootReducer;
 
-},{"./auth":1209,"./edit":1210,"./menu":1212,"./modal":1213,"redux":990}],1212:[function(require,module,exports){
+},{"./auth":1210,"./edit":1211,"./menu":1213,"./modal":1214,"redux":990}],1213:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81740,7 +82238,7 @@ var ACTION_HANDLERS = (_ACTION_HANDLERS = {}, _defineProperty(_ACTION_HANDLERS, 
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1213:[function(require,module,exports){
+},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1214:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81776,7 +82274,7 @@ var ACTION_HANDLERS = _defineProperty({}, _types2.default.MODAL_VISIBLE_CHANGE, 
 
 exports.default = (0, _reduxsauce.createReducer)(INITIAL_STATE, ACTION_HANDLERS);
 
-},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1214:[function(require,module,exports){
+},{"../actions/types":1196,"reduxsauce":992,"seamless-immutable":994}],1215:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81810,7 +82308,7 @@ function rootSaga() {
   }, _marked[0], this);
 }
 
-},{"./startup":1215,"redux-saga/effects":972}],1215:[function(require,module,exports){
+},{"./startup":1216,"redux-saga/effects":972}],1216:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81844,7 +82342,7 @@ function watcher() {
   }, _marked[0], this);
 }
 
-},{"../actions/types":1196,"redux-saga/effects":972}],1216:[function(require,module,exports){
+},{"../actions/types":1196,"redux-saga/effects":972}],1217:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -81884,4 +82382,4 @@ exports.default = function (initialState) {
   return store;
 };
 
-},{"../reducers":1211,"../sagas":1214,"redux":990,"redux-logger":971,"redux-saga":974}]},{},[1197]);
+},{"../reducers":1212,"../sagas":1215,"redux":990,"redux-logger":971,"redux-saga":974}]},{},[1197]);
